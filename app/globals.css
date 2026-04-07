@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Emma Sleep Brand CSS Variables ───────────────────────────────── */
+:root {
+  --color-emma-dark: #403833;
+  --color-emma-accent: #ffa236;
+  --color-emma-light: #fff3e0;
+  --color-success: #4caf50;
+  --color-warning: #ff9800;
+  --color-danger: #f44336;
+  --color-bg: #fafafa;
+  --color-card: #ffffff;
+  --color-text-primary: #403833;
+  --color-text-secondary: #8a7e78;
+  --color-border: #e8e0db;
+}
+
+/* ── Base Styles ───────────────────────────────────────────────────── */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  line-height: 1.5;
+}
+
+/* ── Scrollbar Styling ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* ── Focus Ring ────────────────────────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid var(--color-emma-accent);
+  outline-offset: 2px;
+}
