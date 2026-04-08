@@ -25,7 +25,7 @@ export default function UploadStep({ airtableData, weekNum, year, onRoundingComp
 
     try {
       const buffer = await file.arrayBuffer();
-      const { rows, errors, missingOriginCode } = parseNeedsFile(buffer, false);
+      const { rows, errors, missingOriginCode } = await parseNeedsFile(buffer, false);
 
       if (missingOriginCode || (errors.length > 0 && rows.length === 0)) {
         setValidation({ errors, summary: null, unmatchedRows: [], noCostRows: [] });
@@ -46,7 +46,7 @@ export default function UploadStep({ airtableData, weekNum, year, onRoundingComp
 
     try {
       const buffer = await file.arrayBuffer();
-      const { rows, errors, missingOriginCode } = parseNeedsFile(buffer, true);
+      const { rows, errors, missingOriginCode } = await parseNeedsFile(buffer, true);
 
       if (!missingOriginCode && rows.length > 0) {
         const result = validateRows(rows, airtableData.palletization, airtableData.costs);

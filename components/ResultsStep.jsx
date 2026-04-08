@@ -16,8 +16,9 @@ export default function ResultsStep({ finalConfirmed, finalCutLines, weekNum, ye
   useEffect(() => {
     if (!finalConfirmed) return;
 
+    (async () => {
     try {
-      const { confirmedBase64, cutBase64 } = generateBase64Blobs(finalConfirmed, finalCutLines, weekNum);
+      const { confirmedBase64, cutBase64 } = await generateBase64Blobs(finalConfirmed, finalCutLines, weekNum);
 
       const run = {
         id: Date.now(),
@@ -39,6 +40,7 @@ export default function ResultsStep({ finalConfirmed, finalCutLines, weekNum, ye
     } catch (err) {
       console.warn('Could not save run history:', err);
     }
+    })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load history on mount
@@ -97,14 +99,14 @@ export default function ResultsStep({ finalConfirmed, finalCutLines, weekNum, ye
           label="Download Confirmed Loads"
           filename={`Confirmed_Loads_W${ww}.xlsx`}
           color="success"
-          onClick={() => exportConfirmedLoads(finalConfirmed, weekNum)}
+          onClick={() => exportConfirmedLoads(finalConfirmed, weekNum).catch(console.error)}
           count={`${stats.totalTrucksConfirmed} trucks, ${stats.totalPiecesShipped.toLocaleString()} pieces`}
         />
         <DownloadButton
           label="Download Cut Lines"
           filename={`Cut_Lines_W${ww}.xlsx`}
           color="danger"
-          onClick={() => exportCutLines(finalCutLines, weekNum)}
+          onClick={() => exportCutLines(finalCutLines, weekNum).catch(console.error)}
           count={`${finalCutLines.length} lines, ${stats.totalPiecesCut.toLocaleString()} pieces`}
         />
       </div>
