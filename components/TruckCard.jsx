@@ -1,13 +1,50 @@
 'use client';
 
-/** Reusable truck detail card used in ReviewStep and OverrideStep */
+import { useState } from 'react';
+import { ROOT_CAUSE_OPTIONS } from '../lib/rounding';
+
+/**
+ * Reusable truck detail card used in ReviewStep and OverrideStep.
+ *
+ * In 'review' mode: shows Keep/Cut buttons. When Cut is clicked, an inline
+ * root cause dropdown appears — the user must select a reason before the
+ * decision is saved. This ensures every user-driven cut has a business reason.
+ *
+ * In 'override' mode: shows the cut reason and a Force Keep button.
+ */
 export default function TruckCard({ truck, mode, onKeep, onCut, onForceKeep, userDecision }) {
+  // Local state for the root cause dropdown (only used in 'review' mode)
+  const [showRootCause, setShowRootCause] = useState(
+    userDecision?.action === 'cut' // re-show if already cut
+  );
+  const [selectedRootCause, setSelectedRootCause] = useState(
+    userDecision?.rootCause || ''
+  );
+
   const utilPct = (truck.usedFraction * 100).toFixed(1);
   const utilColor = truck.usedFraction >= 0.8
     ? '#4caf50'
     : truck.usedFraction >= 0.5
       ? '#ff9800'
       : '#f44336';
+
+  const handleCutClick = () => {
+    setShowRootCause(true);
+    setSelectedRootCause('');
+  };
+
+  const handleRootCauseSelect = (cause) => {
+    setSelectedRootCause(cause);
+    onCut(truck.vendorShipmentNumber, cause);
+  };
+
+  const handleKeepClick = () => {
+    setShowRootCause(false);
+    setSelectedRootCause('');
+    onKeep(truck.vendorShipmentNumber);
+  };
+
+  const currentDecisionAction = userDecision?.action;
 
   return (
     <div className="bg-white border border-[#e8e0db] rounded-card shadow-card p-5">
@@ -60,7 +97,6 @@ export default function TruckCard({ truck, mode, onKeep, onCut, onForceKeep, use
 
       {/* Summary bar */}
       <div className="bg-[#fafafa] border border-[#e8e0db] rounded-btn p-3 mb-4">
-        {/* Utilization bar */}
         <div className="mb-2">
           <div className="flex justify-between text-xs mb-1">
             <span className="text-[#8a7e78]">Truck Utilization</span>
@@ -106,36 +142,83 @@ export default function TruckCard({ truck, mode, onKeep, onCut, onForceKeep, use
         </div>
       </div>
 
-      {/* Action buttons */}
+      {/* Action buttons — Review mode */}
       {mode === 'review' && (
-        <div className="flex gap-3">
-          <button
-            onClick={() => onKeep(truck.vendorShipmentNumber)}
-            className={`
-              flex-1 py-2 rounded-btn text-sm font-semibold transition-colors
-              ${userDecision === 'keep'
-                ? 'bg-[#4caf50] text-white'
-                : 'bg-green-50 text-[#4caf50] border border-[#4caf50] hover:bg-[#4caf50] hover:text-white'
-              }
-            `}
-          >
-            {userDecision === 'keep' ? '✓ Kept' : 'Keep'}
-          </button>
-          <button
-            onClick={() => onCut(truck.vendorShipmentNumber)}
-            className={`
-              flex-1 py-2 rounded-btn text-sm font-semibold transition-colors
-              ${userDecision === 'cut'
-                ? 'bg-[#f44336] text-white'
-                : 'bg-red-50 text-[#f44336] border border-[#f44336] hover:bg-[#f44336] hover:text-white'
-              }
-            `}
-          >
-            {userDecision === 'cut' ? '✗ Cut' : 'Cut'}
-          </button>
+        <div>
+          {/* Keep / Cut toggle buttons */}
+          <div className="flex gap-3 mb-3">
+            <button
+              onClick={handleKeepClick}
+              className={`
+                flex-1 py-2 rounded-btn text-sm font-semibold transition-colors
+                ${currentDecisionAction === 'keep'
+                  ? 'bg-[#4caf50] text-white'
+                  : 'bg-green-50 text-[#4caf50] border border-[#4caf50] hover:bg-[#4caf50] hover:text-white'
+                }
+              `}
+            >
+              {currentDecisionAction === 'keep' ? '✓ Kept' : 'Keep'}
+            </button>
+            <button
+              onClick={handleCutClick}
+              className={`
+                flex-1 py-2 rounded-btn text-sm font-semibold transition-colors
+                ${currentDecisionAction === 'cut'
+                  ? 'bg-[#f44336] text-white'
+                  : 'bg-red-50 text-[#f44336] border border-[#f44336] hover:bg-[#f44336] hover:text-white'
+                }
+              `}
+            >
+              {currentDecisionAction === 'cut' ? '✗ Cut' : 'Cut'}
+            </button>
+          </div>
+
+          {/* Root cause dropdown — appears when Cut is clicked */}
+          {showRootCause && currentDecisionAction !== 'keep' && (
+            <div className="bg-[#fff3e0] border border-[#ffa236] rounded-btn p-3">
+              <p className="text-xs font-semibold text-[#403833] mb-2">
+                Select root cause for cutting this truck:
+              </p>
+              <div className="space-y-1.5">
+                {ROOT_CAUSE_OPTIONS.map(cause => (
+                  <label
+                    key={cause}
+                    className={`
+                      flex items-center gap-2 p-2 rounded cursor-pointer text-xs transition-colors
+                      ${selectedRootCause === cause
+                        ? 'bg-[#ffa236] text-white'
+                        : 'bg-white border border-[#e8e0db] text-[#403833] hover:bg-[#fafafa]'
+                      }
+                    `}
+                  >
+                    <input
+                      type="radio"
+                      name={`rootCause-${truck.vendorShipmentNumber}`}
+                      value={cause}
+                      checked={selectedRootCause === cause}
+                      onChange={() => handleRootCauseSelect(cause)}
+                      className="sr-only"
+                    />
+                    <span className={`w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${selectedRootCause === cause ? 'border-white bg-white' : 'border-[#e8e0db]'}`}>
+                      {selectedRootCause === cause && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#ffa236]" />
+                      )}
+                    </span>
+                    {cause}
+                  </label>
+                ))}
+              </div>
+              {!selectedRootCause && (
+                <p className="text-xs text-[#ff9800] mt-2">
+                  Please select a root cause to confirm the cut.
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
 
+      {/* Force Keep button — Override mode */}
       {mode === 'override' && (
         <div className="flex justify-end">
           <button

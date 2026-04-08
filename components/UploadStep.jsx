@@ -88,9 +88,18 @@ export default function UploadStep({ airtableData, weekNum, year, onRoundingComp
   return (
     <div className="max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold text-[#403833] mb-1">Upload Files</h2>
-      <p className="text-[#8a7e78] mb-6">
-        Upload your planning export files. The main file (Prio 1-3) is required; Prio 4 is optional.
+      <p className="text-[#8a7e78] mb-2">
+        Upload your planning export files. <strong className="text-[#403833]">File 1 is required.</strong>{' '}
+        File 2 is optional — if not provided, the Prio 4 top-up step is skipped and rounding proceeds with Prio 1–3 only.
       </p>
+      <div className="flex items-start gap-2 mb-6 p-3 bg-[#fff3e0] border border-[#ffa236] rounded-btn">
+        <svg className="w-4 h-4 text-[#ffa236] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p className="text-xs text-[#403833]">
+          Remember to add the <code className="bg-white px-1 rounded font-mono">origin_location_code</code> column to your file before uploading — this is the pickup location code (e.g. <code className="bg-white px-1 rounded font-mono">MI_PT</code>, <code className="bg-white px-1 rounded font-mono">RF_DE</code>).
+        </p>
+      </div>
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-[#f44336] rounded-btn text-sm text-[#f44336]">
@@ -118,7 +127,7 @@ export default function UploadStep({ airtableData, weekNum, year, onRoundingComp
         />
         <DropZone
           label="Next Week Needs (Prio 4)"
-          helper="Optional — used to top up underutilized trucks"
+          helper="Optional — if uploaded, used to top up trucks below 80%. Skip to run Prio 1–3 only."
           file={prio4File}
           dragging={draggingPrio4}
           onDragOver={() => setDraggingPrio4(true)}

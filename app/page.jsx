@@ -84,6 +84,7 @@ export default function HomePage() {
   }, []);
 
   const handleReviewConfirm = useCallback((decisions) => {
+    // decisions shape: { [vsn]: { action: 'keep'|'cut', rootCause: string|null } }
     setBorderlineDecisions(decisions);
     setStep(STEPS.OVERRIDE);
   }, []);
