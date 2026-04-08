@@ -35,12 +35,6 @@ export async function GET() {
           palletizationFields: palletization[0]?._debugFieldNames || [],
         },
       },
-      {
-        headers: {
-          // Cache at Vercel's CDN for 1 hour; serve stale for another hour while revalidating
-          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=3600',
-        },
-      }
     );
   } catch (error) {
     console.error('Airtable fetch error:', error);

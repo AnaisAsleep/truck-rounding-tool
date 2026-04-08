@@ -28,7 +28,8 @@ export default function SetupStep({ weekNum, year, onWeekChange, onYearChange, a
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/airtable', bustCache ? { cache: 'no-store' } : undefined);
+      const url = bustCache ? `/api/airtable?t=${Date.now()}` : '/api/airtable';
+      const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || `HTTP ${res.status}`);
