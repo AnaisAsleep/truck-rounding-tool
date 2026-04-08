@@ -24,11 +24,11 @@ export default function SetupStep({ weekNum, year, onWeekChange, onYearChange, a
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleRefresh = async () => {
+  const handleRefresh = async (bustCache = false) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/airtable');
+      const res = await fetch('/api/airtable', bustCache ? { cache: 'no-store' } : undefined);
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || `HTTP ${res.status}`);
@@ -100,7 +100,7 @@ export default function SetupStep({ weekNum, year, onWeekChange, onYearChange, a
               </span>
             )}
             <button
-              onClick={handleRefresh}
+              onClick={() => handleRefresh(true)}
               disabled={loading}
               className="
                 px-4 py-2 bg-[#ffa236] text-white font-medium text-sm rounded-btn
@@ -133,7 +133,7 @@ export default function SetupStep({ weekNum, year, onWeekChange, onYearChange, a
           <div className="mb-4 p-3 bg-red-50 border border-[#f44336] rounded-btn text-sm text-[#f44336]">
             <strong>Connection error:</strong> {error}
             <button
-              onClick={handleRefresh}
+              onClick={() => handleRefresh(true)}
               className="ml-2 underline"
             >
               Retry
