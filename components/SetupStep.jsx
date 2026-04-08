@@ -16,15 +16,9 @@ export default function SetupStep({ weekNum, year, onWeekChange, onYearChange, a
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastSynced, setLastSynced] = useState(airtableData?.lastSynced || null);
-  const [fieldNames, setFieldNames] = useState(null);
 
-  // On mount: always fetch field names first (single fast request), then load full data
+  // Auto-load on mount if data not yet fetched
   useEffect(() => {
-    fetch(`/api/airtable/fields?t=${Date.now()}`, { cache: 'no-store' })
-      .then(r => r.json())
-      .then(d => { if (!d.error) setFieldNames(d); })
-      .catch(() => {});
-
     if (!airtableData) handleRefresh();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -173,14 +167,6 @@ export default function SetupStep({ weekNum, year, onWeekChange, onYearChange, a
           />
         </div>
       </div>
-
-      {/* Debug: show field names from both Airtable tables */}
-      {fieldNames && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-300 rounded-btn text-xs text-[#403833] space-y-2">
-          <div><strong>Palletization fields:</strong> <span className="font-mono break-all">{fieldNames.palletization?.fieldNames?.join(', ')}</span></div>
-          <div><strong>Cost fields:</strong> <span className="font-mono break-all">{fieldNames.costs?.fieldNames?.join(', ')}</span></div>
-        </div>
-      )}
 
       {/* Next button */}
       <div className="flex justify-end">

@@ -44,17 +44,19 @@ export default function Home() {
     setStep(3); // → Review
   }, []);
 
-  const handleReviewConfirm = useCallback((truckDecisions) => {
+  const handleReviewConfirm = useCallback((truckDecisions, cutLineNotes) => {
     const { finalConfirmed: fc, finalCutLines: fcl } = finalizeResults(
       roundingResults,
       truckDecisions,
-      [], // no separate force-keep list — handled in Review now
+      [],
       transportDecisions,
+      cutLineNotes || {},
+      unmatchedRows,
     );
     setFinalConfirmed(fc);
     setFinalCutLines(fcl);
     setStep(4); // → Results
-  }, [roundingResults, transportDecisions]);
+  }, [roundingResults, transportDecisions, unmatchedRows]);
 
   const handleStartOver = useCallback(() => {
     setStep(0);
