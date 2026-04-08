@@ -8,6 +8,10 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Prevent xlsx from being bundled server-side (it's browser-only)
+  experimental: {
+    serverComponentsExternalPackages: ['xlsx'],
+  },
   // xlsx uses some Node.js internals; tell webpack to ignore them on client side
   webpack: (config, { isServer }) => {
     if (!isServer) {
