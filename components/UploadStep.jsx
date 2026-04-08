@@ -5,11 +5,28 @@ import { parseNeedsFile, validateRows } from '../lib/excelParser';
 import { runRounding } from '../lib/rounding';
 import ValidationPanel from './ValidationPanel';
 
-export default function UploadStep({ airtableData, weekNum, year, onRoundingComplete, onBack }) {
+/** Return the most common value in an array, or null if empty */
+function mode(arr) {
+  if (!arr.length) return null;
+  const counts = {};
+  arr.forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+  return Number(Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]);
+}
+
+/** Extract the dominant shipping week/year from parsed rows */
+function detectWeekYear(rows) {
+  const weeks = rows.map(r => parseInt(r.shippingWeek)).filter(n => !isNaN(n) && n >= 1 && n <= 53);
+  const years = rows.map(r => parseInt(r.shippingYear)).filter(n => !isNaN(n) && n >= 2020);
+  return { week: mode(weeks), year: mode(years) };
+}
+
+export default function UploadStep({ airtableData, onRoundingComplete, onBack }) {
   const [mainFile, setMainFile] = useState(null);
   const [prio4File, setPrio4File] = useState(null);
   const [validation, setValidation] = useState(null);
   const [prio4Validation, setPrio4Validation] = useState(null);
+  const [detectedWeek, setDetectedWeek] = useState(null);
+  const [detectedYear, setDetectedYear] = useState(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState(null);
   const [draggingMain, setDraggingMain] = useState(false);
@@ -22,15 +39,24 @@ export default function UploadStep({ airtableData, weekNum, year, onRoundingComp
     setError(null);
     setMainFile(file);
     setValidation(null);
+    setDetectedWeek(null);
+    setDetectedYear(null);
+
     try {
       const buffer = await file.arrayBuffer();
       const { rows, errors, missingOriginCode } = await parseNeedsFile(buffer, false);
+
       if (missingOriginCode || (errors.length > 0 && rows.length === 0)) {
         setValidation({ errors, summary: null, unmatchedRows: [], noCostRows: [] });
         return;
       }
+
       const result = validateRows(rows, airtableData.palletization, airtableData.costs);
       setValidation({ ...result, errors });
+
+      const { week, year } = detectWeekYear(rows);
+      setDetectedWeek(week);
+      setDetectedYear(year);
     } catch (err) {
       setError(`Failed to parse file: ${err.message}`);
     }
@@ -55,11 +81,23 @@ export default function UploadStep({ airtableData, weekNum, year, onRoundingComp
     if (!validation?.validRows) return;
     setRunning(true);
     setError(null);
+
+    // Fallback: current ISO week if not found in file
+    const now = new Date();
+    const jan4 = new Date(now.getFullYear(), 0, 4);
+    const start = new Date(jan4);
+    start.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
+    const currentWeek = Math.ceil((now - start) / (7 * 24 * 60 * 60 * 1000));
+    const currentYear = now.getFullYear();
+
+    const wk = detectedWeek || currentWeek;
+    const yr = detectedYear || currentYear;
+
     try {
       await new Promise(r => setTimeout(r, 50));
       const prio4Rows = prio4Validation?.validRows || [];
-      const results = runRounding(validation.validRows, prio4Rows, validation.costMap, weekNum, year);
-      onRoundingComplete(results, validation.unmatchedRows);
+      const results = runRounding(validation.validRows, prio4Rows, validation.costMap, wk, yr);
+      onRoundingComplete(results, validation.unmatchedRows, wk, yr);
     } catch (err) {
       setError(`Rounding failed: ${err.message}`);
     } finally {
@@ -71,18 +109,19 @@ export default function UploadStep({ airtableData, weekNum, year, onRoundingComp
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-xl font-semibold text-stone-900 mb-1">Upload Files</h1>
-      <p className="text-sm text-stone-500 mb-6">
+      <h1 className="text-2xl font-bold text-[#403833] mb-1">Upload Files</h1>
+      <p className="text-[#8a7e78] mb-6">
         File 1 is required. File 2 (Prio 4 top-up) is optional.
       </p>
 
-      <p className="text-xs text-stone-400 mb-5 border-l-2 border-stone-200 pl-3">
-        Make sure your file has an <code className="font-mono text-stone-600 bg-stone-100 px-1 rounded">origin_location_code</code> column
-        with the pickup location code (e.g. <code className="font-mono text-stone-600 bg-stone-100 px-1 rounded">MI_PT</code>).
+      <p className="text-xs text-[#8a7e78] mb-5 pl-3 border-l-2 border-[#e8e0db]">
+        Your file needs an <code className="font-mono bg-[#f0ebe8] text-[#403833] px-1 rounded">origin_location_code</code> column —
+        the pickup location code, e.g. <code className="font-mono bg-[#f0ebe8] text-[#403833] px-1 rounded">MI_PT</code>.
+        The rounding week is read automatically from the <code className="font-mono bg-[#f0ebe8] text-[#403833] px-1 rounded">Shipping week</code> column.
       </p>
 
       {error && (
-        <p className="text-xs text-red-600 mb-4">{error}</p>
+        <p className="text-sm text-red-600 mb-4">{error}</p>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
@@ -111,11 +150,21 @@ export default function UploadStep({ airtableData, weekNum, year, onRoundingComp
       <input ref={mainInputRef}  type="file" accept=".xlsx,.xls" className="hidden" onChange={e => { if (e.target.files[0]) handleMainFile(e.target.files[0]); }} />
       <input ref={prio4InputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={e => { if (e.target.files[0]) handlePrio4File(e.target.files[0]); }} />
 
+      {detectedWeek && (
+        <div className="mb-3 flex items-center gap-2 text-xs text-[#8a7e78]">
+          <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Shipping week detected from file:{' '}
+          <span className="font-semibold text-[#403833]">W{String(detectedWeek).padStart(2,'0')} {detectedYear}</span>
+        </div>
+      )}
+
       {validation && <ValidationPanel validation={validation} />}
 
       {prio4Validation && (
-        <div className="mt-2">
-          <p className="text-xs text-stone-400 mb-1 mt-3">Prio 4 file:</p>
+        <div className="mt-3">
+          <p className="text-xs text-[#8a7e78] mb-1">Prio 4 file:</p>
           <ValidationPanel validation={prio4Validation} />
         </div>
       )}
@@ -123,18 +172,18 @@ export default function UploadStep({ airtableData, weekNum, year, onRoundingComp
       <div className="flex items-center justify-between mt-6">
         <button
           onClick={onBack}
-          className="px-4 py-2 text-sm text-stone-600 border border-stone-200 rounded hover:bg-stone-50 transition-colors"
+          className="px-4 py-2 text-[#403833] border border-[#e8e0db] rounded-lg text-sm font-medium hover:bg-[#fafaf8] transition-colors"
         >
           ← Back
         </button>
         <button
           onClick={handleRunRounding}
           disabled={!canRun}
-          className="px-5 py-2 bg-orange-500 text-white text-sm font-medium rounded hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="px-6 py-2.5 bg-[#ffa236] text-white font-semibold text-sm rounded-lg hover:bg-[#e8922e] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
         >
           {running ? (
             <>
-              <svg className="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
               </svg>
@@ -155,11 +204,11 @@ function DropZone({ label, sublabel, file, dragging, onDragOver, onDragLeave, on
       onDrop={onDrop}
       onClick={onClick}
       className={`
-        border rounded-lg p-5 cursor-pointer flex flex-col justify-center min-h-[120px]
-        transition-colors duration-150
-        ${dragging ? 'border-orange-400 bg-orange-50'
-          : file    ? 'border-green-400 bg-green-50'
-          :           'border-stone-200 border-dashed hover:border-stone-400 hover:bg-stone-50'}
+        border-2 rounded-xl p-5 cursor-pointer flex flex-col justify-center min-h-[120px]
+        transition-all duration-150
+        ${dragging ? 'border-[#ffa236] bg-[#fff8f0]'
+          : file   ? 'border-green-400 bg-green-50'
+          :          'border-dashed border-[#e8e0db] hover:border-[#ffa236] hover:bg-[#fff8f0]'}
       `}
     >
       {file ? (
@@ -168,15 +217,18 @@ function DropZone({ label, sublabel, file, dragging, onDragOver, onDragLeave, on
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
           </svg>
           <div className="min-w-0">
-            <p className="text-sm font-medium text-stone-800 truncate">{file.name}</p>
-            <p className="text-xs text-stone-400 mt-0.5">Click to replace</p>
+            <p className="text-sm font-medium text-[#403833] truncate">{file.name}</p>
+            <p className="text-xs text-[#8a7e78] mt-0.5">Click to replace</p>
           </div>
         </div>
       ) : (
         <>
-          <p className="text-sm font-medium text-stone-700">{label}</p>
-          <p className="text-xs text-stone-400 mt-0.5">{sublabel}</p>
-          <p className="text-xs text-stone-300 mt-3">Drop file or click to browse</p>
+          <svg className="w-6 h-6 text-[#c4b8b0] mb-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+          <p className="text-sm font-semibold text-[#403833]">{label}</p>
+          <p className="text-xs text-[#8a7e78] mt-0.5">{sublabel}</p>
+          <p className="text-xs text-[#c4b8b0] mt-3">Drop here or click to browse</p>
         </>
       )}
     </div>

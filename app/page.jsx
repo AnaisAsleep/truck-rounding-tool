@@ -9,21 +9,12 @@ import ReviewStep from '../components/ReviewStep';
 import ResultsStep from '../components/ResultsStep';
 import { finalizeResults } from '../lib/rounding';
 
-function getCurrentISOWeek() {
-  const now = new Date();
-  const jan4 = new Date(now.getFullYear(), 0, 4);
-  const startOfWeek1 = new Date(jan4);
-  startOfWeek1.setDate(jan4.getDate() - ((jan4.getDay() + 6) % 7));
-  const diff = now - startOfWeek1;
-  return Math.ceil(diff / (7 * 24 * 60 * 60 * 1000));
-}
-
 const STEPS = ['Setup', 'Upload', 'Transport', 'Review', 'Results'];
 
 export default function Home() {
   const [step, setStep] = useState(0);
-  const [weekNum, setWeekNum] = useState(getCurrentISOWeek());
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [weekNum, setWeekNum] = useState(null);
+  const [year, setYear] = useState(null);
   const [airtableData, setAirtableData] = useState(null);
   const [roundingResults, setRoundingResults] = useState(null);
   const [unmatchedRows, setUnmatchedRows] = useState([]);
@@ -33,15 +24,17 @@ export default function Home() {
 
   const handleDataRefresh = useCallback((data) => setAirtableData(data), []);
 
-  const handleRoundingComplete = useCallback((results, unmatched) => {
+  const handleRoundingComplete = useCallback((results, unmatched, wk, yr) => {
     setRoundingResults(results);
     setUnmatchedRows(unmatched || []);
-    setStep(2); // → Transport Mode
+    if (wk) setWeekNum(wk);
+    if (yr) setYear(yr);
+    setStep(2);
   }, []);
 
   const handleTransportConfirm = useCallback((decisions) => {
     setTransportDecisions(decisions);
-    setStep(3); // → Review
+    setStep(3);
   }, []);
 
   const handleReviewConfirm = useCallback((truckDecisions, cutLineNotes) => {
@@ -55,7 +48,7 @@ export default function Home() {
     );
     setFinalConfirmed(fc);
     setFinalCutLines(fcl);
-    setStep(4); // → Results
+    setStep(4);
   }, [roundingResults, transportDecisions, unmatchedRows]);
 
   const handleStartOver = useCallback(() => {
@@ -65,23 +58,24 @@ export default function Home() {
     setTransportDecisions({});
     setFinalConfirmed([]);
     setFinalCutLines([]);
+    setWeekNum(null);
+    setYear(null);
   }, []);
 
   return (
-    <div className="min-h-screen bg-stone-50">
+    <div>
       <ProgressBar currentStep={step} steps={STEPS} />
-      <div>
+      <div className="max-w-5xl mx-auto px-6 py-8">
         {step === 0 && (
           <SetupStep
-            weekNum={weekNum} year={year}
-            onWeekChange={setWeekNum} onYearChange={setYear}
-            airtableData={airtableData} onDataRefresh={handleDataRefresh}
+            airtableData={airtableData}
+            onDataRefresh={handleDataRefresh}
             onNext={() => setStep(1)}
           />
         )}
         {step === 1 && (
           <UploadStep
-            airtableData={airtableData} weekNum={weekNum} year={year}
+            airtableData={airtableData}
             onRoundingComplete={handleRoundingComplete}
             onBack={() => setStep(0)}
           />
@@ -106,7 +100,8 @@ export default function Home() {
           <ResultsStep
             finalConfirmed={finalConfirmed}
             finalCutLines={finalCutLines}
-            weekNum={weekNum} year={year}
+            weekNum={weekNum}
+            year={year}
             onStartOver={handleStartOver}
           />
         )}

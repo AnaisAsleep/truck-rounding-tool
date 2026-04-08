@@ -8,12 +8,21 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        stone: {
-          925: '#1c1917',
+        emma: {
+          dark:    '#403833',
+          accent:  '#ffa236',
+          light:   '#fff8f0',
+          bg:      '#fafaf8',
+          border:  '#e8e0db',
+          muted:   '#8a7e78',
+          card:    '#ffffff',
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        sans: ['"DM Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+      },
+      boxShadow: {
+        card: '0 1px 3px rgba(64,56,51,0.08), 0 1px 2px rgba(64,56,51,0.06)',
       },
     },
   },
