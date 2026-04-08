@@ -68,9 +68,9 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#fafafa]">
+    <div className="min-h-screen bg-stone-50">
       <ProgressBar currentStep={step} steps={STEPS} />
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <div>
         {step === 0 && (
           <SetupStep
             weekNum={weekNum} year={year}
@@ -110,7 +110,7 @@ export default function Home() {
             onStartOver={handleStartOver}
           />
         )}
-      </main>
+      </div>
     </div>
   );
 }
