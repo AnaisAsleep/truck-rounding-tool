@@ -167,6 +167,14 @@ export default function SetupStep({ weekNum, year, onWeekChange, onYearChange, a
         </div>
       </div>
 
+      {/* Debug: show palletization field names so we can verify the matching key */}
+      {meta.palletizationFields?.length > 0 && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-300 rounded-btn text-xs text-[#403833]">
+          <strong>Airtable palletization fields:</strong>{' '}
+          <span className="font-mono">{meta.palletizationFields.join(', ')}</span>
+        </div>
+      )}
+
       {/* Next button */}
       <div className="flex justify-end">
         <button

@@ -31,6 +31,8 @@ export async function GET() {
           palletizationCount: palletization.length,
           costCount: costs.length,
           uniqueSuppliers: new Set(palletization.map(p => p.origin_location_record)).size,
+          // Debug: field names from first record so we can see what Airtable actually has
+          palletizationFields: palletization[0]?._debugFieldNames || [],
         },
       },
       {
