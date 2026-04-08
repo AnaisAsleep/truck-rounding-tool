@@ -16,23 +16,29 @@ export default function SetupStep({ weekNum, year, onWeekChange, onYearChange, a
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lastSynced, setLastSynced] = useState(airtableData?.lastSynced || null);
+  const [fieldNames, setFieldNames] = useState(null);
 
-  // Auto-load on mount if no data yet
+  // On mount: always fetch field names first (single fast request), then load full data
   useEffect(() => {
-    if (!airtableData) {
-      handleRefresh();
-    }
+    fetch(`/api/airtable/fields?t=${Date.now()}`, { cache: 'no-store' })
+      .then(r => r.json())
+      .then(d => { if (!d.error) setFieldNames(d); })
+      .catch(() => {});
+
+    if (!airtableData) handleRefresh();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleRefresh = async (bustCache = false) => {
     setLoading(true);
     setError(null);
     try {
-      const url = bustCache ? `/api/airtable?t=${Date.now()}` : '/api/airtable';
+      const url = `/api/airtable?t=${Date.now()}`;
       const res = await fetch(url, { cache: 'no-store' });
       if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || `HTTP ${res.status}`);
+        const text = await res.text();
+        let msg;
+        try { msg = JSON.parse(text).error; } catch { msg = text.slice(0, 120); }
+        throw new Error(msg || `HTTP ${res.status}`);
       }
       const data = await res.json();
       onDataRefresh(data);
@@ -168,11 +174,11 @@ export default function SetupStep({ weekNum, year, onWeekChange, onYearChange, a
         </div>
       </div>
 
-      {/* Debug: show palletization field names so we can verify the matching key */}
-      {meta.palletizationFields?.length > 0 && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-300 rounded-btn text-xs text-[#403833]">
-          <strong>Airtable palletization fields:</strong>{' '}
-          <span className="font-mono">{meta.palletizationFields.join(', ')}</span>
+      {/* Debug: show field names from both Airtable tables */}
+      {fieldNames && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-300 rounded-btn text-xs text-[#403833] space-y-2">
+          <div><strong>Palletization fields:</strong> <span className="font-mono break-all">{fieldNames.palletization?.fieldNames?.join(', ')}</span></div>
+          <div><strong>Cost fields:</strong> <span className="font-mono break-all">{fieldNames.costs?.fieldNames?.join(', ')}</span></div>
         </div>
       )}
 

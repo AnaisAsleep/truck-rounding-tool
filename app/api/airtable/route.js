@@ -10,8 +10,6 @@
 import { NextResponse } from 'next/server';
 import { fetchPalletizationTable, fetchCostTable } from '../../../lib/airtable';
 
-// Edge runtime: no cold starts, 30s timeout (vs 10s for serverless on hobby tier)
-export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
