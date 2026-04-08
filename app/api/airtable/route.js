@@ -10,7 +10,8 @@
 import { NextResponse } from 'next/server';
 import { fetchPalletizationTable, fetchCostTable } from '../../../lib/airtable';
 
-// Never pre-render this route at build time — it calls the live Airtable API
+// Edge runtime: no cold starts, 30s timeout (vs 10s for serverless on hobby tier)
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
