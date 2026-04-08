@@ -8,7 +8,7 @@ export default function ValidationPanel({ validation }) {
 
   if (!validation) return null;
 
-  const { summary, unmatchedRows, noCostRows, errors } = validation;
+  const { summary, unmatchedRows, noCostRows, errors, sampleAirtablePkeys } = validation;
 
   return (
     <div className="border border-[#e8e0db] rounded-card bg-white p-5 mt-4">
@@ -73,23 +73,36 @@ export default function ValidationPanel({ validation }) {
                 {unmatchedRows.length} lines with no Airtable palletization match (will be cut)
               </button>
               {showUnmatched && (
-                <div className="mt-2 max-h-40 overflow-y-auto border border-[#e8e0db] rounded-btn">
-                  <table className="w-full text-xs">
-                    <thead className="bg-[#fafafa] sticky top-0">
-                      <tr>
-                        <th className="text-left p-2 text-[#8a7e78]">SKU</th>
-                        <th className="text-left p-2 text-[#8a7e78]">Lane</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {unmatchedRows.map((r, i) => (
-                        <tr key={i} className="border-t border-[#e8e0db]">
-                          <td className="p-2 font-mono text-[#403833]">{r.sku}</td>
-                          <td className="p-2 text-[#8a7e78]">{r.lane}</td>
+                <div className="mt-2">
+                  {sampleAirtablePkeys && sampleAirtablePkeys.length > 0 && (
+                    <div className="mb-2 p-2 bg-yellow-50 border border-yellow-300 rounded-btn text-xs text-[#403833]">
+                      <strong>Sample Airtable pkeys (first 5):</strong>
+                      <div className="font-mono mt-1 space-y-0.5">
+                        {sampleAirtablePkeys.map((k, i) => <div key={i}>{k}</div>)}
+                      </div>
+                      <div className="mt-1"><strong>Your file builds pkeys as:</strong> <span className="font-mono">{unmatchedRows[0] ? unmatchedRows[0].pkey : '—'}</span></div>
+                    </div>
+                  )}
+                  <div className="max-h-40 overflow-y-auto border border-[#e8e0db] rounded-btn">
+                    <table className="w-full text-xs">
+                      <thead className="bg-[#fafafa] sticky top-0">
+                        <tr>
+                          <th className="text-left p-2 text-[#8a7e78]">SKU</th>
+                          <th className="text-left p-2 text-[#8a7e78]">Lane</th>
+                          <th className="text-left p-2 text-[#8a7e78]">Pkey used</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {unmatchedRows.map((r, i) => (
+                          <tr key={i} className="border-t border-[#e8e0db]">
+                            <td className="p-2 font-mono text-[#403833]">{r.sku}</td>
+                            <td className="p-2 text-[#8a7e78]">{r.lane}</td>
+                            <td className="p-2 font-mono text-[#8a7e78] text-xs">{r.pkey}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
