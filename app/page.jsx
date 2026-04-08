@@ -4,12 +4,11 @@ import { useState, useCallback } from 'react';
 import ProgressBar from '../components/ProgressBar';
 import SetupStep from '../components/SetupStep';
 import UploadStep from '../components/UploadStep';
+import TransportModeStep from '../components/TransportModeStep';
 import ReviewStep from '../components/ReviewStep';
-import OverrideStep from '../components/OverrideStep';
 import ResultsStep from '../components/ResultsStep';
 import { finalizeResults } from '../lib/rounding';
 
-/** Get current ISO week number */
 function getCurrentISOWeek() {
   const now = new Date();
   const jan4 = new Date(now.getFullYear(), 0, 4);
@@ -19,158 +18,97 @@ function getCurrentISOWeek() {
   return Math.ceil(diff / (7 * 24 * 60 * 60 * 1000));
 }
 
-const STEPS = {
-  SETUP: 1,
-  UPLOAD: 2,
-  REVIEW: 3,
-  OVERRIDE: 4,
-  RESULTS: 5,
-};
+const STEPS = ['Setup', 'Upload', 'Transport', 'Review', 'Results'];
 
-export default function HomePage() {
-  // ── Step navigation ───────────────────────────────────────────────
-  const [step, setStep] = useState(STEPS.SETUP);
-
-  // ── Setup state ───────────────────────────────────────────────────
-  const [weekNum, setWeekNum] = useState(getCurrentISOWeek);
-  const [year, setYear] = useState(() => new Date().getFullYear());
+export default function Home() {
+  const [step, setStep] = useState(0);
+  const [weekNum, setWeekNum] = useState(getCurrentISOWeek());
+  const [year, setYear] = useState(new Date().getFullYear());
   const [airtableData, setAirtableData] = useState(null);
-
-  // ── Rounding results ──────────────────────────────────────────────
   const [roundingResults, setRoundingResults] = useState(null);
   const [unmatchedRows, setUnmatchedRows] = useState([]);
+  const [transportDecisions, setTransportDecisions] = useState({});
+  const [finalConfirmed, setFinalConfirmed] = useState([]);
+  const [finalCutLines, setFinalCutLines] = useState([]);
 
-  // ── User decisions ────────────────────────────────────────────────
-  const [borderlineDecisions, setBorderlineDecisions] = useState({});
-  const [forceKeptVSNs, setForceKeptVSNs] = useState([]);
-
-  // ── Final output ──────────────────────────────────────────────────
-  const [finalConfirmed, setFinalConfirmed] = useState(null);
-  const [finalCutLines, setFinalCutLines] = useState(null);
-
-  // ── Handlers ─────────────────────────────────────────────────────
-
-  const handleDataRefresh = useCallback((data) => {
-    setAirtableData(data);
-  }, []);
+  const handleDataRefresh = useCallback((data) => setAirtableData(data), []);
 
   const handleRoundingComplete = useCallback((results, unmatched) => {
     setRoundingResults(results);
     setUnmatchedRows(unmatched || []);
-
-    // Add cut lines for unmatched rows (no Airtable match)
-    const unmatchedCutLines = (unmatched || []).map(row => ({
-      originLocationCode: row.originLocationCode,
-      supplierName: row.supplierName,
-      destinationLocation: row.destinationLocation,
-      sku: row.sku,
-      originalQty: (row.prio1 || 0) + (row.prio2 || 0) + (row.prio3 || 0),
-      priority: Math.min(
-        row.prio1 > 0 ? 1 : 9,
-        row.prio2 > 0 ? 2 : 9,
-        row.prio3 > 0 ? 3 : 9,
-      ),
-      lane: row.lane,
-      cutReason: row.cutReason || `No Airtable match — SKU+lane combo '${row.pkey}' not found in palletization table`,
-    }));
-
-    // Attach unmatched cut lines to rounding results
-    setRoundingResults(prev => ({
-      ...results,
-      cutLines: [...(results.cutLines || []), ...unmatchedCutLines],
-    }));
-
-    setStep(STEPS.REVIEW);
+    setStep(2); // → Transport Mode
   }, []);
 
-  const handleReviewConfirm = useCallback((decisions) => {
-    // decisions shape: { [vsn]: { action: 'keep'|'cut', rootCause: string|null } }
-    setBorderlineDecisions(decisions);
-    setStep(STEPS.OVERRIDE);
+  const handleTransportConfirm = useCallback((decisions) => {
+    setTransportDecisions(decisions);
+    setStep(3); // → Review
   }, []);
 
-  const handleOverrideFinalize = useCallback((forceKept) => {
-    setForceKeptVSNs(forceKept);
-
-    // Finalize results incorporating user decisions
-    const { finalConfirmed: confirmed, finalCutLines: cutLines } = finalizeResults(
+  const handleReviewConfirm = useCallback((truckDecisions) => {
+    const { finalConfirmed: fc, finalCutLines: fcl } = finalizeResults(
       roundingResults,
-      borderlineDecisions,
-      forceKept
+      truckDecisions,
+      [], // no separate force-keep list — handled in Review now
+      transportDecisions,
     );
-
-    setFinalConfirmed(confirmed);
-    setFinalCutLines(cutLines);
-    setStep(STEPS.RESULTS);
-  }, [roundingResults, borderlineDecisions]);
+    setFinalConfirmed(fc);
+    setFinalCutLines(fcl);
+    setStep(4); // → Results
+  }, [roundingResults, transportDecisions]);
 
   const handleStartOver = useCallback(() => {
-    setStep(STEPS.SETUP);
+    setStep(0);
     setRoundingResults(null);
     setUnmatchedRows([]);
-    setBorderlineDecisions({});
-    setForceKeptVSNs([]);
-    setFinalConfirmed(null);
-    setFinalCutLines(null);
+    setTransportDecisions({});
+    setFinalConfirmed([]);
+    setFinalCutLines([]);
   }, []);
 
-  // ── Render ────────────────────────────────────────────────────────
   return (
-    <div>
-      {/* Progress indicator */}
-      <ProgressBar currentStep={step} />
-
-      {/* Divider */}
-      <div className="border-b border-[#e8e0db] mb-8" />
-
-      {/* Step content */}
-      {step === STEPS.SETUP && (
-        <SetupStep
-          weekNum={weekNum}
-          year={year}
-          onWeekChange={setWeekNum}
-          onYearChange={setYear}
-          airtableData={airtableData}
-          onDataRefresh={handleDataRefresh}
-          onNext={() => setStep(STEPS.UPLOAD)}
-        />
-      )}
-
-      {step === STEPS.UPLOAD && (
-        <UploadStep
-          airtableData={airtableData}
-          weekNum={weekNum}
-          year={year}
-          onRoundingComplete={handleRoundingComplete}
-          onBack={() => setStep(STEPS.SETUP)}
-        />
-      )}
-
-      {step === STEPS.REVIEW && roundingResults && (
-        <ReviewStep
-          borderlineTrucks={roundingResults.borderlineTrucks}
-          onConfirm={handleReviewConfirm}
-          onBack={() => setStep(STEPS.UPLOAD)}
-        />
-      )}
-
-      {step === STEPS.OVERRIDE && roundingResults && (
-        <OverrideStep
-          cutTrucks={roundingResults.cutTrucks}
-          onFinalize={handleOverrideFinalize}
-          onBack={() => setStep(STEPS.REVIEW)}
-        />
-      )}
-
-      {step === STEPS.RESULTS && finalConfirmed && (
-        <ResultsStep
-          finalConfirmed={finalConfirmed}
-          finalCutLines={finalCutLines || []}
-          weekNum={weekNum}
-          year={year}
-          onStartOver={handleStartOver}
-        />
-      )}
+    <div className="min-h-screen bg-[#fafafa]">
+      <ProgressBar currentStep={step} steps={STEPS} />
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        {step === 0 && (
+          <SetupStep
+            weekNum={weekNum} year={year}
+            onWeekChange={setWeekNum} onYearChange={setYear}
+            airtableData={airtableData} onDataRefresh={handleDataRefresh}
+            onNext={() => setStep(1)}
+          />
+        )}
+        {step === 1 && (
+          <UploadStep
+            airtableData={airtableData} weekNum={weekNum} year={year}
+            onRoundingComplete={handleRoundingComplete}
+            onBack={() => setStep(0)}
+          />
+        )}
+        {step === 2 && roundingResults && (
+          <TransportModeStep
+            confirmedTrucks={roundingResults.confirmedTrucks}
+            costMap={airtableData?.costMap || {}}
+            onConfirm={handleTransportConfirm}
+            onBack={() => setStep(1)}
+          />
+        )}
+        {step === 3 && roundingResults && (
+          <ReviewStep
+            roundingResults={roundingResults}
+            unmatchedRows={unmatchedRows}
+            onConfirm={handleReviewConfirm}
+            onBack={() => setStep(2)}
+          />
+        )}
+        {step === 4 && (
+          <ResultsStep
+            finalConfirmed={finalConfirmed}
+            finalCutLines={finalCutLines}
+            weekNum={weekNum} year={year}
+            onStartOver={handleStartOver}
+          />
+        )}
+      </main>
     </div>
   );
 }

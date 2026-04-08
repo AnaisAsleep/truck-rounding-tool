@@ -25,8 +25,8 @@ export default function RootLayout({ children }) {
                 Truck Rounding Tool
               </span>
             </div>
-            <span className="text-[#8a7e78] text-xs hidden sm:block">
-              by Emma Sleep Logistics
+            <span className="text-white/50 text-xs hidden sm:block font-normal tracking-wide">
+              Emma Sleep · Transportation D2C Ops
             </span>
           </div>
         </header>

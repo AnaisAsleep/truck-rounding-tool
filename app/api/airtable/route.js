@@ -20,10 +20,15 @@ export async function GET() {
       fetchCostTable(),
     ]);
 
+    // Build costMap keyed by lane for easy lookup
+    const costMap = {};
+    costs.forEach(c => { if (c.lane && !costMap[c.lane]) costMap[c.lane] = c; });
+
     return NextResponse.json(
       {
         palletization,
         costs,
+        costMap,
         lastSynced: new Date().toISOString(),
         meta: {
           palletizationCount: palletization.length,

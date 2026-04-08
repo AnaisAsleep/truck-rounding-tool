@@ -1,21 +1,23 @@
 'use client';
 
-const STEPS = [
-  { id: 1, label: 'Setup' },
-  { id: 2, label: 'Upload' },
-  { id: 3, label: 'Review' },
-  { id: 4, label: 'Override' },
-  { id: 5, label: 'Results' },
-];
+export default function ProgressBar({ currentStep, steps }) {
+  const stepList = steps
+    ? steps.map((label, idx) => ({ id: idx, label }))
+    : [
+        { id: 0, label: 'Setup' },
+        { id: 1, label: 'Upload' },
+        { id: 2, label: 'Transport' },
+        { id: 3, label: 'Review' },
+        { id: 4, label: 'Results' },
+      ];
 
-export default function ProgressBar({ currentStep }) {
   return (
     <div className="w-full py-4 px-6">
       <div className="flex items-center justify-center gap-0">
-        {STEPS.map((step, idx) => {
+        {stepList.map((step, idx) => {
           const isCompleted = currentStep > step.id;
           const isActive = currentStep === step.id;
-          const isLast = idx === STEPS.length - 1;
+          const isLast = idx === stepList.length - 1;
 
           return (
             <div key={step.id} className="flex items-center">
@@ -38,7 +40,7 @@ export default function ProgressBar({ currentStep }) {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
                   ) : (
-                    step.id
+                    step.id + 1
                   )}
                 </div>
                 <span

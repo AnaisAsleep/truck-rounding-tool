@@ -26,27 +26,18 @@ html {
 }
 
 body {
-  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text-primary);
+  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  background-color: #fafafa;
+  color: #403833;
+  -webkit-font-smoothing: antialiased;
   line-height: 1.5;
 }
 
-/* ── Scrollbar Styling ─────────────────────────────────────────────── */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--color-bg);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-secondary);
-}
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #c4b8b0; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #8a7e78; }
 
 /* ── Focus Ring ────────────────────────────────────────────────────── */
 *:focus-visible {

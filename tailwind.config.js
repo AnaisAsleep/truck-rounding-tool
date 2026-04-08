@@ -22,6 +22,8 @@ module.exports = {
           textPrimary: '#403833',
           textSecondary: '#8a7e78',
           border: '#e8e0db',
+          navy: '#1e293b',
+          slate: '#64748b',
         },
       },
       fontFamily: {
