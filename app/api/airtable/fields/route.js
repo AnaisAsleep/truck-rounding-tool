@@ -12,8 +12,8 @@ export const dynamic = 'force-dynamic';
 
 const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
 const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
-const PALLETIZATION_TABLE_ID = process.env.PALLETIZATION_TABLE_ID || 'tblY2PxdLq84p8Erc';
-const COST_TABLE_ID = process.env.COST_TABLE_ID || 'tbl6Vr4XwyNhLVsMX';
+const PALLETIZATION_TABLE_ID = 'tbl6Vr4XwyNhLVsMX';
+const COST_TABLE_ID = 'tblY2PxdLq84p8Erc';
 
 async function fetchOneRecord(tableId) {
   const url = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${tableId}?pageSize=1`;
