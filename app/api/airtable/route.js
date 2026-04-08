@@ -21,16 +21,24 @@ export async function GET() {
       fetchCostTable(),
     ]);
 
-    return NextResponse.json({
-      palletization,
-      costs,
-      lastSynced: new Date().toISOString(),
-      meta: {
-        palletizationCount: palletization.length,
-        costCount: costs.length,
-        uniqueSuppliers: new Set(palletization.map(p => p.origin_location_record)).size,
+    return NextResponse.json(
+      {
+        palletization,
+        costs,
+        lastSynced: new Date().toISOString(),
+        meta: {
+          palletizationCount: palletization.length,
+          costCount: costs.length,
+          uniqueSuppliers: new Set(palletization.map(p => p.origin_location_record)).size,
+        },
       },
-    });
+      {
+        headers: {
+          // Cache at Vercel's CDN for 1 hour; serve stale for another hour while revalidating
+          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     console.error('Airtable fetch error:', error);
     return NextResponse.json(
