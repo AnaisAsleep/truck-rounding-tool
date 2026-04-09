@@ -29,7 +29,6 @@ export default function SetupStep({ airtableData, onDataRefresh, onNext }) {
 
   useEffect(() => {
     if (airtableData) return;
-    // Try cache first — instant load
     const cached = loadCache();
     if (cached) {
       onDataRefresh(cached);
@@ -40,7 +39,7 @@ export default function SetupStep({ airtableData, onDataRefresh, onNext }) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleRefresh = async (force = true) => {
+  const handleRefresh = async () => {
     setLoading(true);
     setError(null);
     setFromCache(false);
@@ -63,70 +62,51 @@ export default function SetupStep({ airtableData, onDataRefresh, onNext }) {
     }
   };
 
-  const meta = airtableData?.meta || {};
   const isConnected = !!airtableData && !error;
 
   return (
     <div className="max-w-lg">
       <h1 className="text-2xl font-bold text-[#403833] mb-1">Setup</h1>
-      <p className="text-[#8a7e78] mb-8">Connect to Airtable to load palletization rules and transport costs.</p>
+      <p className="text-[#8a7e78] mb-8">Connect to Airtable before running the rounding.</p>
 
-      <div className="bg-white border border-[#e8e0db] rounded-xl shadow-card p-6 mb-6">
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="font-semibold text-[#403833]">Airtable Data</h2>
+      <div className="bg-white border border-[#e8e0db] rounded-xl shadow-card p-5 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            {loading ? (
+              <svg className="animate-spin w-4 h-4 text-[#ffa236]" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+            ) : (
+              <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${isConnected ? 'bg-green-500' : error ? 'bg-red-400' : 'bg-[#e8e0db]'}`} />
+            )}
+            <div>
+              <p className="text-sm font-medium text-[#403833]">
+                {loading ? 'Connecting…' : isConnected ? 'Connected' : error ? 'Connection failed' : 'Not connected'}
+              </p>
+              {lastSynced && !loading && (
+                <p className="text-xs text-[#8a7e78]">
+                  {fromCache ? 'Cached · ' : ''}Last sync {new Date(lastSynced).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              )}
+            </div>
+          </div>
+
           <button
             onClick={handleRefresh}
             disabled={loading}
-            className="flex items-center gap-1.5 text-xs text-[#8a7e78] hover:text-[#403833] disabled:opacity-50 transition-colors"
+            className="flex items-center gap-1.5 text-xs text-[#8a7e78] hover:text-[#403833] disabled:opacity-40 transition-colors"
           >
             <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h5M20 20v-5h-5M4.55 9A8 8 0 1120 15.45" />
             </svg>
-            {loading ? 'Loading…' : 'Refresh'}
+            Refresh
           </button>
         </div>
 
         {error && (
-          <div className="mb-4 text-sm text-red-600 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-            {error}
-            <button onClick={handleRefresh} className="underline ml-1">Retry</button>
-          </div>
+          <p className="mt-3 text-xs text-red-600">{error} — <button onClick={handleRefresh} className="underline">retry</button></p>
         )}
-
-        {loading && !airtableData ? (
-          <div className="flex items-center gap-2 text-sm text-[#8a7e78]">
-            <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-20" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-            </svg>
-            Connecting…
-          </div>
-        ) : isConnected ? (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
-              <span className="text-sm font-medium text-[#403833]">Connected</span>
-              {lastSynced && (
-                <span className="text-xs text-[#8a7e78]">
-                  · {fromCache ? 'from cache · ' : ''}synced {new Date(lastSynced).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              )}
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: 'Palletization rules', value: meta.palletizationCount },
-                { label: 'Cost lanes', value: meta.costCount },
-                { label: 'Suppliers', value: meta.uniqueSuppliers },
-              ].map(({ label, value }) => (
-                <div key={label} className="bg-[#fafaf8] border border-[#e8e0db] rounded-lg p-3">
-                  <p className="text-xs text-[#8a7e78] mb-0.5">{label}</p>
-                  <p className="text-lg font-bold text-[#403833]">{value ?? '—'}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
       </div>
 
       <button
@@ -134,7 +114,7 @@ export default function SetupStep({ airtableData, onDataRefresh, onNext }) {
         disabled={!isConnected || loading}
         className="px-6 py-2.5 bg-[#ffa236] text-white font-semibold text-sm rounded-lg hover:bg-[#e8922e] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
-        Next →
+        Ready to round →
       </button>
     </div>
   );

@@ -5,6 +5,8 @@ import { RAIL_REASON_CODES } from '../lib/rounding';
 
 export default function TransportModeStep({ confirmedTrucks, costMap, onConfirm, onBack }) {
   const [decisions, setDecisions] = useState({});
+  const [expandedTrucks, setExpandedTrucks] = useState({});
+  const toggleExpand = (vsn) => setExpandedTrucks(prev => ({ ...prev, [vsn]: !prev[vsn] }));
 
   const containerTrucks = confirmedTrucks.filter(t => t.lines?.[0]?.loadingUnit === 'CONTAINER 40FT');
   const ftlCount = confirmedTrucks.length - containerTrucks.length;
@@ -86,8 +88,43 @@ export default function TransportModeStep({ confirmedTrucks, costMap, onConfirm,
                         )}
                       </span>
                     )}
-                    <span className="text-[#c4b8b0]">{truck.lines.length} SKU{truck.lines.length !== 1 ? 's' : ''} · P{truck.minPrio === 9 ? 1 : truck.minPrio}</span>
+                    <button
+                      onClick={() => toggleExpand(truck.vendorShipmentNumber)}
+                      className="flex items-center gap-1 text-[#8a7e78] hover:text-[#403833] transition-colors"
+                    >
+                      <svg className={`w-3 h-3 transition-transform ${expandedTrucks[truck.vendorShipmentNumber] ? 'rotate-90' : ''}`} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 2l4 4-4 4"/>
+                      </svg>
+                      {truck.lines.length} SKU{truck.lines.length !== 1 ? 's' : ''} · P{truck.minPrio === 9 ? 1 : truck.minPrio}
+                    </button>
                   </div>
+
+                  {expandedTrucks[truck.vendorShipmentNumber] && truck.lines?.length > 0 && (
+                    <div className="mt-3 border border-[#e8e0db] rounded-lg overflow-hidden">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-[#fafaf8] border-b border-[#e8e0db]">
+                            <th className="text-left px-3 py-1.5 font-semibold text-[#8a7e78]">SKU</th>
+                            <th className="text-left px-3 py-1.5 font-semibold text-[#8a7e78]">Supplier</th>
+                            <th className="text-right px-3 py-1.5 font-semibold text-[#8a7e78]">Qty</th>
+                            <th className="text-right px-3 py-1.5 font-semibold text-[#8a7e78]">Pallets</th>
+                            <th className="text-center px-3 py-1.5 font-semibold text-[#8a7e78]">P</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {truck.lines.map((line, li) => (
+                            <tr key={li} className={`border-t border-[#f0ebe8] ${li % 2 !== 0 ? 'bg-[#fafaf8]' : 'bg-white'}`}>
+                              <td className="px-3 py-1.5 font-mono text-[#403833]">{line.sku}</td>
+                              <td className="px-3 py-1.5 text-[#8a7e78] truncate max-w-[140px]">{line.supplierName || '—'}</td>
+                              <td className="px-3 py-1.5 text-right text-[#403833]">{line.qty?.toLocaleString()}</td>
+                              <td className="px-3 py-1.5 text-right text-[#8a7e78]">{line.pallets?.toFixed(1)}</td>
+                              <td className="px-3 py-1.5 text-center text-[#8a7e78]">P{line.priority}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex gap-1.5 shrink-0">
