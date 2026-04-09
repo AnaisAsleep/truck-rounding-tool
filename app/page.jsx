@@ -1,15 +1,22 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import ProgressBar from '../components/ProgressBar';
 import SetupStep from '../components/SetupStep';
 import UploadStep from '../components/UploadStep';
-import TransportModeStep from '../components/TransportModeStep';
 import ReviewStep from '../components/ReviewStep';
+import TransportModeStep from '../components/TransportModeStep';
 import ResultsStep from '../components/ResultsStep';
 import { finalizeResults } from '../lib/rounding';
 
-const STEPS = ['Setup', 'Upload', 'Transport', 'Review', 'Results'];
+const STEPS = ['Setup', 'Upload', 'Review', 'Transport', 'Results'];
+
+function isContainer(truck) {
+  return (
+    truck.lines?.[0]?.loadingUnit === 'CONTAINER 40FT' ||
+    truck.lines?.[0]?.palletData?.loading_unit === 'CONTAINER 40FT'
+  );
+}
 
 export default function Home() {
   const [step, setStep] = useState(0);
@@ -18,7 +25,8 @@ export default function Home() {
   const [airtableData, setAirtableData] = useState(null);
   const [roundingResults, setRoundingResults] = useState(null);
   const [unmatchedRows, setUnmatchedRows] = useState([]);
-  const [transportDecisions, setTransportDecisions] = useState({});
+  // Saved after Review step, used when Transport confirms
+  const [reviewDecisions, setReviewDecisions] = useState(null);
   const [finalConfirmed, setFinalConfirmed] = useState([]);
   const [finalCutLines, setFinalCutLines] = useState([]);
 
@@ -32,15 +40,40 @@ export default function Home() {
     setStep(2);
   }, []);
 
-  const handleTransportConfirm = useCallback((decisions) => {
-    setTransportDecisions(decisions);
+  // After Review: save decisions, compute accepted containers, go to Transport
+  const handleReviewConfirm = useCallback((truckDecisions, cutLineNotes, truckAdditions) => {
+    setReviewDecisions({ truckDecisions, cutLineNotes, truckAdditions });
     setStep(3);
   }, []);
 
-  const handleReviewConfirm = useCallback((truckDecisions, cutLineNotes, truckAdditions) => {
+  // Containers to show in Transport Mode:
+  //  - All auto-confirmed containers from rounding
+  //  - Force-kept containers (action='keep') from Review — NOT 20ft rebooks (they go sea-only)
+  const confirmedContainersForTransport = useMemo(() => {
+    if (!roundingResults) return [];
+    const { confirmedTrucks = [], borderlineTrucks = [], cutTrucks = [] } = roundingResults;
+    const decisions = reviewDecisions?.truckDecisions || {};
+
+    const autoContainers = confirmedTrucks.filter(isContainer);
+
+    const reviewKeptContainers = [...borderlineTrucks, ...cutTrucks].filter(t => {
+      if (!isContainer(t)) return false;
+      const d = decisions[t.vendorShipmentNumber];
+      // 'keep' = stays as 40ft → needs transport mode decision
+      // '20ft' = rebooked as 20ft → sea only, skip transport mode
+      // 'cut' / undefined = not accepted → skip
+      return d?.action === 'keep';
+    });
+
+    return [...autoContainers, ...reviewKeptContainers];
+  }, [roundingResults, reviewDecisions]);
+
+  // After Transport: finalize everything and go to Results
+  const handleTransportConfirm = useCallback((transportDecisions) => {
+    const { truckDecisions, cutLineNotes, truckAdditions } = reviewDecisions || {};
     const { finalConfirmed: fc, finalCutLines: fcl } = finalizeResults(
       roundingResults,
-      truckDecisions,
+      truckDecisions || {},
       [],
       transportDecisions,
       cutLineNotes || {},
@@ -50,13 +83,13 @@ export default function Home() {
     setFinalConfirmed(fc);
     setFinalCutLines(fcl);
     setStep(4);
-  }, [roundingResults, transportDecisions, unmatchedRows]);
+  }, [roundingResults, reviewDecisions, unmatchedRows]);
 
   const handleStartOver = useCallback(() => {
     setStep(0);
     setRoundingResults(null);
     setUnmatchedRows([]);
-    setTransportDecisions({});
+    setReviewDecisions(null);
     setFinalConfirmed([]);
     setFinalCutLines([]);
     setWeekNum(null);
@@ -82,18 +115,18 @@ export default function Home() {
           />
         )}
         {step === 2 && roundingResults && (
-          <TransportModeStep
-            confirmedTrucks={roundingResults.confirmedTrucks}
-            costMap={airtableData?.costMap || {}}
-            onConfirm={handleTransportConfirm}
-            onBack={() => setStep(1)}
-          />
-        )}
-        {step === 3 && roundingResults && (
           <ReviewStep
             roundingResults={roundingResults}
             unmatchedRows={unmatchedRows}
             onConfirm={handleReviewConfirm}
+            onBack={() => setStep(1)}
+          />
+        )}
+        {step === 3 && roundingResults && (
+          <TransportModeStep
+            confirmedTrucks={confirmedContainersForTransport}
+            costMap={airtableData?.costMap || {}}
+            onConfirm={handleTransportConfirm}
             onBack={() => setStep(2)}
           />
         )}

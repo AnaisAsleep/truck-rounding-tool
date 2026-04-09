@@ -8,7 +8,11 @@ export default function TransportModeStep({ confirmedTrucks, costMap, onConfirm,
   const [expandedTrucks, setExpandedTrucks] = useState({});
   const toggleExpand = (vsn) => setExpandedTrucks(prev => ({ ...prev, [vsn]: !prev[vsn] }));
 
-  const containerTrucks = confirmedTrucks.filter(t => t.lines?.[0]?.loadingUnit === 'CONTAINER 40FT');
+  // Check both loadingUnit (camelCase on line) and palletData.loading_unit (from Airtable)
+  const containerTrucks = confirmedTrucks.filter(t =>
+    t.lines?.[0]?.loadingUnit === 'CONTAINER 40FT' ||
+    t.lines?.[0]?.palletData?.loading_unit === 'CONTAINER 40FT'
+  );
   const ftlCount = confirmedTrucks.length - containerTrucks.length;
 
   const setMode = (vsn, mode) =>
@@ -29,13 +33,13 @@ export default function TransportModeStep({ confirmedTrucks, costMap, onConfirm,
       <div className="max-w-lg">
         <h1 className="text-2xl font-bold text-[#403833] mb-2">Container Transport Mode</h1>
         <p className="text-[#8a7e78] mb-6">
-          All {ftlCount} confirmed shipment{ftlCount !== 1 ? 's' : ''} are FTL — transport mode is road only.
+          No 40ft containers in this run — all accepted shipments travel by road.
         </p>
         <button
           onClick={() => onConfirm({})}
           className="px-6 py-2.5 bg-[#ffa236] text-white font-semibold text-sm rounded-lg hover:bg-[#e8922e] transition-colors"
         >
-          Continue to Review →
+          Continue to Results →
         </button>
       </div>
     );
@@ -49,11 +53,16 @@ export default function TransportModeStep({ confirmedTrucks, costMap, onConfirm,
         {ftlCount > 0 && <span className="text-[#c4b8b0]"> · {ftlCount} FTL truck{ftlCount !== 1 ? 's' : ''} travel by road.</span>}
       </p>
 
-      {railCount > 0 && (
-        <p className="text-xs text-[#8a7e78] mb-5 pl-3 border-l-2 border-[#e8e0db]">
-          {railCount} rail container{railCount > 1 ? 's' : ''} — VSNs will update to <span className="font-mono text-[#403833]">R_Rx_…</span>
+      <div className="mb-5 flex flex-wrap gap-3">
+        {railCount > 0 && (
+          <p className="text-xs text-[#8a7e78] pl-3 border-l-2 border-[#e8e0db]">
+            {railCount} rail container{railCount > 1 ? 's' : ''} — VSNs will update to <span className="font-mono text-[#403833]">R_Rx_…</span>
+          </p>
+        )}
+        <p className="text-xs text-[#8a7e78] pl-3 border-l-2 border-amber-200">
+          Rail is only available for 40ft containers — shipments rebooked as 20ft in the previous step are excluded here and travel by sea.
         </p>
-      )}
+      </div>
 
       <div className="bg-white border border-[#e8e0db] rounded-xl shadow-card overflow-hidden mb-6 divide-y divide-[#f0ebe8]">
         {containerTrucks.map(truck => {
@@ -173,7 +182,7 @@ export default function TransportModeStep({ confirmedTrucks, costMap, onConfirm,
           disabled={!allComplete}
           className="px-6 py-2.5 bg-[#ffa236] text-white font-semibold text-sm rounded-lg hover:bg-[#e8922e] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
-          Confirm & Review Cuts →
+          Confirm & Generate Results →
         </button>
       </div>
     </div>
