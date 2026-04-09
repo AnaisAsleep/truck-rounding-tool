@@ -2,18 +2,48 @@
 
 import { useState, useEffect } from 'react';
 
+const CACHE_KEY = 'airtable_data_cache';
+const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+function loadCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const { data, savedAt } = JSON.parse(raw);
+    if (Date.now() - savedAt > CACHE_TTL_MS) return null;
+    return data;
+  } catch { return null; }
+}
+
+function saveCache(data) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ data, savedAt: Date.now() }));
+  } catch {}
+}
+
 export default function SetupStep({ airtableData, onDataRefresh, onNext }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [fromCache, setFromCache] = useState(false);
   const [lastSynced, setLastSynced] = useState(airtableData?.lastSynced || null);
 
   useEffect(() => {
-    if (!airtableData) handleRefresh();
+    if (airtableData) return;
+    // Try cache first — instant load
+    const cached = loadCache();
+    if (cached) {
+      onDataRefresh(cached);
+      setLastSynced(cached.lastSynced);
+      setFromCache(true);
+    } else {
+      handleRefresh();
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleRefresh = async () => {
+  const handleRefresh = async (force = true) => {
     setLoading(true);
     setError(null);
+    setFromCache(false);
     try {
       const res = await fetch(`/api/airtable?t=${Date.now()}`, { cache: 'no-store' });
       if (!res.ok) {
@@ -23,6 +53,7 @@ export default function SetupStep({ airtableData, onDataRefresh, onNext }) {
         throw new Error(msg || `HTTP ${res.status}`);
       }
       const data = await res.json();
+      saveCache(data);
       onDataRefresh(data);
       setLastSynced(data.lastSynced);
     } catch (err) {
@@ -78,7 +109,7 @@ export default function SetupStep({ airtableData, onDataRefresh, onNext }) {
               <span className="text-sm font-medium text-[#403833]">Connected</span>
               {lastSynced && (
                 <span className="text-xs text-[#8a7e78]">
-                  · synced {new Date(lastSynced).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  · {fromCache ? 'from cache · ' : ''}synced {new Date(lastSynced).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               )}
             </div>
