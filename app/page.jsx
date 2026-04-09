@@ -37,7 +37,7 @@ export default function Home() {
     setStep(3);
   }, []);
 
-  const handleReviewConfirm = useCallback((truckDecisions, cutLineNotes) => {
+  const handleReviewConfirm = useCallback((truckDecisions, cutLineNotes, truckAdditions) => {
     const { finalConfirmed: fc, finalCutLines: fcl } = finalizeResults(
       roundingResults,
       truckDecisions,
@@ -45,6 +45,7 @@ export default function Home() {
       transportDecisions,
       cutLineNotes || {},
       unmatchedRows,
+      truckAdditions || {},
     );
     setFinalConfirmed(fc);
     setFinalCutLines(fcl);
