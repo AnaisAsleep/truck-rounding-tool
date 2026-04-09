@@ -10,7 +10,7 @@
 import { NextResponse } from 'next/server';
 import { fetchPalletizationTable, fetchCostTable } from '../../../lib/airtable';
 
-export const revalidate = 1800; // cache for 30 minutes
+export const dynamic = 'force-dynamic'; // don't pre-render at build time
 
 export async function GET() {
   try {
