@@ -19,6 +19,8 @@ export default function ReviewStep({ roundingResults, unmatchedRows = [], onConf
 
   const [truckDecisions, setTruckDecisions] = useState({});
   const [lineNotes, setLineNotes] = useState({});
+  const [expandedTrucks, setExpandedTrucks] = useState({});
+  const toggleExpand = (vsn) => setExpandedTrucks(prev => ({ ...prev, [vsn]: !prev[vsn] }));
 
   const reviewTrucks = [
     ...borderlineTrucks.map(t => ({ ...t, reviewType: 'borderline' })),
@@ -116,7 +118,18 @@ export default function ReviewStep({ roundingResults, unmatchedRows = [], onConf
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-1.5 text-xs">
                     <span className="font-mono font-semibold text-[#403833] text-sm">{truck.vendorShipmentNumber}</span>
                     <span className="text-[#8a7e78]">{truck.origin} → {truck.destination}</span>
-                    <span className="text-[#8a7e78]">{truck.lines?.length} SKU{truck.lines?.length !== 1 ? 's' : ''}</span>
+                    <button
+                      onClick={() => toggleExpand(truck.vendorShipmentNumber)}
+                      className="flex items-center gap-1 text-[#8a7e78] hover:text-[#403833] transition-colors"
+                    >
+                      <svg
+                        className={`w-3 h-3 transition-transform ${expandedTrucks[truck.vendorShipmentNumber] ? 'rotate-90' : ''}`}
+                        viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+                      >
+                        <path d="M4 2l4 4-4 4"/>
+                      </svg>
+                      {truck.lines?.length} SKU{truck.lines?.length !== 1 ? 's' : ''}
+                    </button>
                     <span className={`font-medium ${fill >= 80 ? 'text-green-600' : fill >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
                       {fill}% fill
                     </span>
@@ -134,6 +147,33 @@ export default function ReviewStep({ roundingResults, unmatchedRows = [], onConf
 
                   {truck.cutReason && (
                     <p className="text-xs text-[#8a7e78] mb-3">{truck.cutReason}</p>
+                  )}
+
+                  {expandedTrucks[truck.vendorShipmentNumber] && truck.lines?.length > 0 && (
+                    <div className="mb-3 border border-[#e8e0db] rounded-lg overflow-hidden">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-[#fafaf8] border-b border-[#e8e0db]">
+                            <th className="text-left px-3 py-1.5 font-semibold text-[#8a7e78]">SKU</th>
+                            <th className="text-left px-3 py-1.5 font-semibold text-[#8a7e78]">Supplier</th>
+                            <th className="text-right px-3 py-1.5 font-semibold text-[#8a7e78]">Qty</th>
+                            <th className="text-right px-3 py-1.5 font-semibold text-[#8a7e78]">Pallets</th>
+                            <th className="text-center px-3 py-1.5 font-semibold text-[#8a7e78]">P</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {truck.lines.map((line, li) => (
+                            <tr key={li} className={`border-t border-[#f0ebe8] ${li % 2 !== 0 ? 'bg-[#fafaf8]' : 'bg-white'}`}>
+                              <td className="px-3 py-1.5 font-mono text-[#403833]">{line.sku}</td>
+                              <td className="px-3 py-1.5 text-[#8a7e78] truncate max-w-[160px]">{line.supplierName || '—'}</td>
+                              <td className="px-3 py-1.5 text-right text-[#403833]">{line.qty?.toLocaleString()}</td>
+                              <td className="px-3 py-1.5 text-right text-[#8a7e78]">{line.pallets?.toFixed(1)}</td>
+                              <td className="px-3 py-1.5 text-center text-[#8a7e78]">P{line.priority}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   )}
 
                   <div className="flex flex-wrap gap-1.5 mb-3">
