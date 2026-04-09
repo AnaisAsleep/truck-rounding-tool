@@ -123,6 +123,11 @@ export default function ReviewStep({ roundingResults, unmatchedRows = [], onConf
                     <path d="M4 2l4 4-4 4"/>
                   </svg>
                   {truck.lines?.length} SKU{truck.lines?.length !== 1 ? 's' : ''}
+                  {truck.lines?.some(l => l.priority === 4) && (
+                    <span className="ml-1 px-1 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-600">
+                      +P4
+                    </span>
+                  )}
                 </button>
                 <span className={`font-semibold ${fillColor}`}>
                   {fillPct}%{d.action === '20ft' ? ' of 20ft' : ' fill'}
@@ -186,7 +191,11 @@ export default function ReviewStep({ roundingResults, unmatchedRows = [], onConf
                                 <span className="text-green-600 ml-1">+{addedPallets}</span>
                               )}
                             </td>
-                            <td className="px-3 py-2 text-center text-[#8a7e78]">P{line.priority}</td>
+                            <td className="px-3 py-2 text-center">
+                              <span className={`text-xs font-semibold ${line.priority === 4 ? 'text-purple-600' : 'text-[#8a7e78]'}`}>
+                                P{line.priority}
+                              </span>
+                            </td>
                             <td className="px-3 py-2">
                               {lineIsLoose ? (
                                 <div className="flex items-center gap-1.5 justify-center">

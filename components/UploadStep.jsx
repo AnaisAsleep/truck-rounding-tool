@@ -68,12 +68,27 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack })
     try {
       const buffer = await file.arrayBuffer();
       const { rows, errors, missingOriginCode } = await parseNeedsFile(buffer, true);
-      if (!missingOriginCode && rows.length > 0) {
-        const result = validateRows(rows, airtableData.palletization, airtableData.costs);
-        setPrio4Validation({ ...result, errors });
+      if (missingOriginCode) {
+        setPrio4Validation({
+          errors: [{ type: 'missing_column', message: 'Missing origin_location_code column — Prio 4 file was not processed.' }],
+          summary: null, unmatchedRows: [], noCostRows: [], validRows: [],
+        });
+        return;
       }
+      if (rows.length === 0) {
+        setPrio4Validation({
+          errors: [{ type: 'empty', message: 'No valid rows found in Prio 4 file — check that Prio 1/2/3 quantity columns have data.' }],
+          summary: null, unmatchedRows: [], noCostRows: [], validRows: [],
+        });
+        return;
+      }
+      const result = validateRows(rows, airtableData.palletization, airtableData.costs);
+      setPrio4Validation({ ...result, errors });
     } catch (err) {
-      console.warn('Prio 4 parse error:', err);
+      setPrio4Validation({
+        errors: [{ type: 'parse_error', message: `Failed to parse Prio 4 file: ${err.message}` }],
+        summary: null, unmatchedRows: [], noCostRows: [], validRows: [],
+      });
     }
   };
 
