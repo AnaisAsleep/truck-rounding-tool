@@ -151,7 +151,7 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack })
           onClick={() => mainInputRef.current?.click()}
         />
         <DropZone
-          label="Prio 4 Needs"
+          label="Prio 4 / Index 1"
           sublabel="Optional · next-week top-up"
           file={prio4File}
           dragging={draggingPrio4}
