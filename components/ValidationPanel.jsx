@@ -14,13 +14,16 @@ export default function ValidationPanel({ validation }) {
     <div className="border border-[#e8e0db] rounded-xl bg-white overflow-hidden mt-4">
 
       {errors?.length > 0 && (
-        <div className="px-4 py-3 bg-red-50 border-b border-red-100">
-          {errors.map((err, i) => (
-            <div key={i}>
-              <p className="text-sm font-semibold text-red-700">{err.message}</p>
-              {err.details && <p className="text-xs text-red-500 mt-0.5">{err.details}</p>}
-            </div>
-          ))}
+        <div className="px-4 py-3 border-b border-[#e8e0db] space-y-2">
+          {errors.map((err, i) => {
+            const isWarning = err.severity === 'warning';
+            return (
+              <div key={i} className={`rounded-lg px-3 py-2 ${isWarning ? 'bg-amber-50' : 'bg-red-50'}`}>
+                <p className={`text-sm font-semibold ${isWarning ? 'text-amber-700' : 'text-red-700'}`}>{err.message}</p>
+                {err.details && <p className={`text-xs mt-0.5 ${isWarning ? 'text-amber-600' : 'text-red-500'}`}>{err.details}</p>}
+              </div>
+            );
+          })}
         </div>
       )}
 
