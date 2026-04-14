@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { exportConfirmedLoads, exportCutLines, generateBase64Blobs, downloadBase64Blob } from '../lib/excelExporter';
+import { exportConfirmedLoads, exportCutLines, exportCombined, generateBase64Blobs, downloadBase64Blob } from '../lib/excelExporter';
 import { calcSummaryStats } from '../lib/rounding';
 
 const HISTORY_KEY = 'truck_rounding_history';
@@ -184,7 +184,7 @@ export default function ResultsStep({ finalConfirmed, finalCutLines, weekNum, ye
       )}
 
       {/* Downloads */}
-      <div className="flex gap-3 mb-8">
+      <div className="flex gap-3 mb-3">
         <button
           onClick={() => exportConfirmedLoads(finalConfirmed, weekNum).catch(console.error)}
           className="flex-1 flex items-center justify-between px-4 py-3.5 bg-white border border-[#e8e0db] rounded-xl text-sm hover:border-[#ffa236] hover:shadow-card transition-all shadow-card"
@@ -218,6 +218,24 @@ export default function ResultsStep({ finalConfirmed, finalCutLines, weekNum, ye
           </div>
         </button>
       </div>
+
+      {/* Combined file */}
+      <button
+        onClick={() => exportCombined(finalConfirmed, finalCutLines, weekNum).catch(console.error)}
+        className="w-full flex items-center justify-between px-4 py-3.5 bg-white border border-[#e8e0db] rounded-xl text-sm hover:border-[#403833] hover:shadow-card transition-all shadow-card mb-8"
+      >
+        <div className="text-left">
+          <p className="font-semibold text-[#403833]">All Lines (Combined)</p>
+          <p className="text-xs text-[#8a7e78] mt-0.5">
+            Confirmed + cut · fill % · cost/piece · W{ww}.xlsx
+          </p>
+        </div>
+        <div className="w-8 h-8 rounded-lg bg-[#fafaf8] flex items-center justify-center shrink-0 ml-3">
+          <svg className="w-4 h-4 text-[#8a7e78]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+        </div>
+      </button>
 
       {/* Start over */}
       <div className="mb-8">
