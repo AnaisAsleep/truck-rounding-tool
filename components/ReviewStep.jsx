@@ -9,8 +9,6 @@ const ACTIONS = [
   { value: '20ft', label: 'Book 20ft Container' },
 ];
 
-const CONTAINER_20FT_RATIO = 0.45; // a 20ft holds ~45% of a 40ft
-
 function getAdjustedFill(truck, action, skuAdditions) {
   const palletData = truck.lines?.[0]?.palletData;
   const palletsPerTruck = palletData?.pallets_per_truck || 0;
@@ -34,8 +32,10 @@ function getAdjustedFill(truck, action, skuAdditions) {
   return fill;
 }
 
+const CONTAINER_20FT_RATIO = 0.45;
+
 export default function ReviewStep({ roundingResults, unmatchedRows = [], onConfirm, onBack }) {
-  const { borderlineTrucks = [], cutTrucks = [] } = roundingResults;
+  const { borderlineTrucks = [], cutTrucks = [], confirmedTrucks = [] } = roundingResults;
 
   const [truckDecisions, setTruckDecisions] = useState({});
   const [truckAdditions, setTruckAdditions] = useState({});  // { [vsn]: { [sku]: { pallets, pcs, inputValue } } }
@@ -66,6 +66,20 @@ export default function ReviewStep({ roundingResults, unmatchedRows = [], onConf
 
   const handleConfirm = () => onConfirm(truckDecisions, {}, truckAdditions);
 
+  // Live avg fill: auto-confirmed trucks + review trucks with keep/20ft decisions
+  const avgFillStats = (() => {
+    let fillSum = confirmedTrucks.reduce((s, t) => s + (t.usedFraction || 0), 0);
+    let count = confirmedTrucks.length;
+    for (const t of reviewTrucks) {
+      const d = getTruck(t.vendorShipmentNumber);
+      if (d.action === 'keep' || d.action === '20ft') {
+        fillSum += getAdjustedFill(t, d.action, truckAdditions[t.vendorShipmentNumber] || {});
+        count++;
+      }
+    }
+    return { avg: count > 0 ? fillSum / count : 0, total: count };
+  })();
+
   if (reviewTrucks.length === 0) {
     return (
       <div className="max-w-xl py-12">
@@ -83,13 +97,30 @@ export default function ReviewStep({ roundingResults, unmatchedRows = [], onConf
     );
   }
 
+  const avgFillPct = Math.round(avgFillStats.avg * 100);
+  const avgFillColor = avgFillPct >= 80 ? 'text-green-600' : avgFillPct >= 50 ? 'text-amber-500' : 'text-red-500';
+  const avgFillBarColor = avgFillPct >= 80 ? 'bg-green-500' : avgFillPct >= 50 ? 'bg-amber-400' : 'bg-red-400';
+
   return (
     <div className="max-w-4xl space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-[#403833]">Review Cuts</h1>
-        <p className="text-[#8a7e78] mt-1 text-sm">
-          {reviewTrucks.length} truck decision{reviewTrucks.length !== 1 ? 's' : ''} · {trucksDecided}/{reviewTrucks.length} decided
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[#403833]">Review Cuts</h1>
+          <p className="text-[#8a7e78] mt-1 text-sm">
+            {reviewTrucks.length} truck decision{reviewTrucks.length !== 1 ? 's' : ''} · {trucksDecided}/{reviewTrucks.length} decided
+          </p>
+        </div>
+        {/* Live avg fill stat */}
+        <div className="bg-white border border-[#e8e0db] rounded-xl px-5 py-3 shadow-card min-w-[200px]">
+          <p className="text-xs text-[#8a7e78] mb-1">Avg fill rate · {avgFillStats.total} trucks kept</p>
+          <div className="flex items-center gap-3">
+            <span className={`text-2xl font-bold tabular-nums ${avgFillColor}`}>{avgFillPct}%</span>
+            <div className="flex-1 h-2 bg-[#f0ebe8] rounded-full overflow-hidden">
+              <div className={`h-full rounded-full transition-all duration-300 ${avgFillBarColor}`} style={{ width: `${Math.min(avgFillPct, 100)}%` }} />
+            </div>
+          </div>
+          <p className="text-xs text-[#c4b8b0] mt-1">Updates as you keep or cut trucks</p>
+        </div>
       </div>
 
       <div className="bg-white border border-[#e8e0db] rounded-xl shadow-card overflow-hidden divide-y divide-[#f0ebe8]">
