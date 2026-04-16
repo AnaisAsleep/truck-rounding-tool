@@ -31,11 +31,12 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack })
   const [error, setError] = useState(null);
   const [draggingMain, setDraggingMain] = useState(false);
   const [draggingPrio4, setDraggingPrio4] = useState(false);
+  const [useConstrained, setUseConstrained] = useState(true);
 
   const mainInputRef  = useRef();
   const prio4InputRef = useRef();
 
-  const handleMainFile = async (file) => {
+  const handleMainFile = async (file, constrained = useConstrained) => {
     setError(null);
     setMainFile(file);
     setValidation(null);
@@ -44,7 +45,7 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack })
 
     try {
       const buffer = await file.arrayBuffer();
-      const { rows, errors, missingOriginCode } = await parseNeedsFile(buffer, false);
+      const { rows, errors, missingOriginCode } = await parseNeedsFile(buffer, false, constrained);
 
       if (missingOriginCode || (errors.length > 0 && rows.length === 0)) {
         setValidation({ errors, summary: null, unmatchedRows: [], noCostRows: [] });
@@ -120,14 +121,43 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack })
     }
   };
 
+  const handleToggleConstrained = (val) => {
+    setUseConstrained(val);
+    if (mainFile) handleMainFile(mainFile, val);
+  };
+
   const canRun = validation?.validRows?.length > 0 && !running;
 
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-bold text-[#403833] mb-1">Upload Files</h1>
-      <p className="text-[#8a7e78] mb-6">
+      <p className="text-[#8a7e78] mb-5">
         File 1 is required. File 2 (Prio 4 top-up) is optional.
       </p>
+
+      {/* Constrained / Unconstrained toggle */}
+      <div className="mb-5">
+        <p className="text-xs font-semibold text-[#403833] mb-2">Quantity mode</p>
+        <div className="inline-flex rounded-lg border border-[#e8e0db] overflow-hidden text-sm">
+          <button
+            onClick={() => handleToggleConstrained(true)}
+            className={`px-4 py-2 font-medium transition-colors ${useConstrained ? 'bg-[#403833] text-white' : 'bg-white text-[#8a7e78] hover:bg-[#fafaf8]'}`}
+          >
+            Constrained
+          </button>
+          <button
+            onClick={() => handleToggleConstrained(false)}
+            className={`px-4 py-2 font-medium transition-colors border-l border-[#e8e0db] ${!useConstrained ? 'bg-[#403833] text-white' : 'bg-white text-[#8a7e78] hover:bg-[#fafaf8]'}`}
+          >
+            Unconstrained
+          </button>
+        </div>
+        <p className="text-xs text-[#8a7e78] mt-1.5">
+          {useConstrained
+            ? 'Ordered quantity is capped at the constrained column value per SKU.'
+            : 'Full Prio 1+2+3 sum is used — constraint column is ignored.'}
+        </p>
+      </div>
 
       <p className="text-xs text-[#8a7e78] mb-5 pl-3 border-l-2 border-[#e8e0db]">
         Your file needs an <code className="font-mono bg-[#f0ebe8] text-[#403833] px-1 rounded">origin_location_code</code> column —
