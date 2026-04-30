@@ -8,16 +8,17 @@
  */
 
 import { NextResponse } from 'next/server';
-import { fetchPalletizationTable, fetchCostTable } from '../../../lib/airtable';
+import { fetchPalletizationTable, fetchCostTable, fetchLocationLookupTable } from '../../../lib/airtable';
 
 export const dynamic = 'force-dynamic'; // don't pre-render at build time
 
 export async function GET() {
   try {
-    // Fetch both tables in parallel for speed
-    const [palletization, costs] = await Promise.all([
+    // Fetch all tables in parallel
+    const [palletization, costs, locationLookup] = await Promise.all([
       fetchPalletizationTable(),
       fetchCostTable(),
+      fetchLocationLookupTable().catch(() => ({})), // non-fatal if unavailable
     ]);
 
     // Build costMap keyed by lane for easy lookup
@@ -29,6 +30,7 @@ export async function GET() {
         palletization,
         costs,
         costMap,
+        locationLookup,
         lastSynced: new Date().toISOString(),
         meta: {
           palletizationCount: palletization.length,

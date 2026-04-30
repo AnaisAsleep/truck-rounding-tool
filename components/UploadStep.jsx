@@ -45,7 +45,8 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack })
 
     try {
       const buffer = await file.arrayBuffer();
-      const { rows, errors, missingOriginCode } = await parseNeedsFile(buffer, false, constrained);
+      const locationLookup = airtableData?.locationLookup || {};
+      const { rows, errors, missingOriginCode } = await parseNeedsFile(buffer, false, constrained, locationLookup);
 
       if (missingOriginCode || (errors.length > 0 && rows.length === 0)) {
         setValidation({ errors, summary: null, unmatchedRows: [], noCostRows: [] });
@@ -68,7 +69,8 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack })
     setPrio4Validation(null);
     try {
       const buffer = await file.arrayBuffer();
-      const { rows, errors, missingOriginCode } = await parseNeedsFile(buffer, true);
+      const locationLookup = airtableData?.locationLookup || {};
+      const { rows, errors, missingOriginCode } = await parseNeedsFile(buffer, true, true, locationLookup);
       if (missingOriginCode) {
         setPrio4Validation({
           errors: [{ type: 'missing_column', message: 'Missing origin_location_code column — Prio 4 file was not processed.' }],
