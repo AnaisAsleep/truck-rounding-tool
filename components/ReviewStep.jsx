@@ -364,6 +364,7 @@ function TruckRow({ truck, decision: d, done, skuAdditions, isExpanded, onToggle
       <div className="flex flex-wrap gap-1.5 mb-3">
         {ACTIONS.filter(opt => {
           if (opt.value === '20ft' && fallback !== '20ft Container') return false;
+          if (opt.value === '20ft' && (truck.usedFraction / CONTAINER_20FT_RATIO) > 1) return false;
           return true;
         }).map(opt => (
           <button
