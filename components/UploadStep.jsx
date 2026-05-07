@@ -165,11 +165,22 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack, i
         </p>
       </div>
 
-      <p className="text-xs text-[#8a7e78] mb-5 pl-3 border-l-2 border-[#e8e0db]">
-        Your file needs an <code className="font-mono bg-[#f0ebe8] text-[#403833] px-1 rounded">origin_location_code</code> column —
-        the pickup location code, e.g. <code className="font-mono bg-[#f0ebe8] text-[#403833] px-1 rounded">MI_PT</code>.
-        The rounding week is read automatically from the <code className="font-mono bg-[#f0ebe8] text-[#403833] px-1 rounded">Shipping week</code> column.
-      </p>
+      <div className="mb-5 bg-[#fafaf8] border border-[#e8e0db] rounded-xl px-4 py-3.5">
+        <p className="text-xs font-semibold text-[#403833] mb-2.5">File requirements — Prio 1–3</p>
+        <ul className="space-y-1.5">
+          {[
+            { label: 'Source', value: 'SO99+ Proposals export (.xlsx)' },
+            { label: 'Required column', value: <><code className="font-mono bg-[#f0ebe8] px-1 rounded">origin_location_code</code> — pickup location, e.g. <code className="font-mono bg-[#f0ebe8] px-1 rounded">MI_PT</code></> },
+            { label: 'Week detection', value: <>Read automatically from <code className="font-mono bg-[#f0ebe8] px-1 rounded">Shipping week</code> column — editable before running</> },
+            { label: 'Prio 4 file', value: 'Optional — same format, used for top-up only' },
+          ].map(({ label, value }) => (
+            <li key={label} className="flex gap-2 text-xs">
+              <span className="text-[#c4b8b0] shrink-0 w-28">{label}</span>
+              <span className="text-[#8a7e78]">{value}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {error && (
         <p className="text-sm text-red-600 mb-4">{error}</p>

@@ -1,12 +1,13 @@
 'use client';
 
-export default function ProgressBar({ currentStep, steps }) {
+export default function ProgressBar({ currentStep, steps, helpButton }) {
   const stepList = (steps || ['Setup', 'Upload', 'Transport', 'Review', 'Results'])
     .map((label, id) => ({ id, label }));
 
   return (
     <div className="bg-white border-b border-[#e8e0db]">
-      <div className="max-w-5xl mx-auto px-6 py-3 flex items-center">
+      <div className="max-w-5xl mx-auto px-6 py-3 flex items-center gap-3">
+        <div className="flex flex-1 items-center">
         {stepList.map((step, idx) => {
           const done   = currentStep > step.id;
           const active = currentStep === step.id;
@@ -35,6 +36,8 @@ export default function ProgressBar({ currentStep, steps }) {
             </div>
           );
         })}
+        </div>
+        {helpButton && <div className="shrink-0">{helpButton}</div>}
       </div>
     </div>
   );

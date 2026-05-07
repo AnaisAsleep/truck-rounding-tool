@@ -9,6 +9,7 @@ import MilkRunStep from '../components/MilkRunStep';
 import TransportModeStep from '../components/TransportModeStep';
 import ResultsStep from '../components/ResultsStep';
 import { finalizeResults, finalizeMilkRunDecisions } from '../lib/rounding';
+import WelcomeModal from '../components/WelcomeModal';
 
 // Step indices
 const STEP_SETUP     = 0;
@@ -39,6 +40,7 @@ export default function Home() {
   const [milkRunDecisions, setMilkRunDecisions] = useState(null);
   const [finalConfirmed, setFinalConfirmed] = useState([]);
   const [finalCutLines, setFinalCutLines] = useState([]);
+  const [showHelp, setShowHelp] = useState(false);
 
   const handleDataRefresh = useCallback((data) => setAirtableData(data), []);
 
@@ -147,7 +149,8 @@ export default function Home() {
 
   return (
     <div>
-      <ProgressBar currentStep={step} steps={STEPS} />
+      <WelcomeModal key={showHelp ? 'forced' : 'auto'} forceOpen={showHelp} onClose={() => setShowHelp(false)} />
+      <ProgressBar currentStep={step} steps={STEPS} helpButton={<button onClick={() => setShowHelp(true)} className="w-6 h-6 rounded-full border border-[#e8e0db] text-[#8a7e78] hover:border-[#ffa236] hover:text-[#ffa236] text-xs font-semibold transition-colors flex items-center justify-center" title="How to use">?</button>} />
       <div className="max-w-5xl mx-auto px-6 py-8">
         {step === STEP_SETUP && (
           <SetupStep
