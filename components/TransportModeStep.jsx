@@ -8,7 +8,6 @@ export default function TransportModeStep({ confirmedTrucks, costMap, onConfirm,
   const [expandedTrucks, setExpandedTrucks] = useState({});
   const toggleExpand = (vsn) => setExpandedTrucks(prev => ({ ...prev, [vsn]: !prev[vsn] }));
 
-  // Check both loadingUnit (camelCase on line) and palletData.loading_unit (from Airtable)
   const containerTrucks = confirmedTrucks.filter(t =>
     t.lines?.[0]?.loadingUnit === 'CONTAINER 40FT' ||
     t.lines?.[0]?.palletData?.loading_unit === 'CONTAINER 40FT'
@@ -21,12 +20,29 @@ export default function TransportModeStep({ confirmedTrucks, costMap, onConfirm,
     setDecisions(prev => ({ ...prev, [vsn]: { ...prev[vsn], railReason } }));
   const getDecision = (vsn) => decisions[vsn] || { mode: 'sea', railReason: null };
 
+  const setAllSea = () => {
+    const next = {};
+    containerTrucks.forEach(t => { next[t.vendorShipmentNumber] = { mode: 'sea', railReason: null }; });
+    setDecisions(next);
+  };
+
   const allComplete = containerTrucks.every(t => {
     const d = getDecision(t.vendorShipmentNumber);
     return d.mode === 'sea' || (d.mode === 'rail' && d.railReason);
   });
 
   const railCount = containerTrucks.filter(t => getDecision(t.vendorShipmentNumber).mode === 'rail').length;
+
+  // Running total of selected transport costs
+  const { totalCost, knownCount } = containerTrucks.reduce((acc, truck) => {
+    const d = getDecision(truck.vendorShipmentNumber);
+    const costData = costMap[truck.lane];
+    const cost = d.mode === 'rail'
+      ? (costData?.price_rail_freight_rate_eur ?? null)
+      : (costData?.price_sea_freight_total_eur ?? truck.transportCost ?? null);
+    if (cost != null) { acc.totalCost += cost; acc.knownCount++; }
+    return acc;
+  }, { totalCost: 0, knownCount: 0 });
 
   if (containerTrucks.length === 0) {
     return (
@@ -47,24 +63,49 @@ export default function TransportModeStep({ confirmedTrucks, costMap, onConfirm,
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-2xl font-bold text-[#403833] mb-1">Container Transport Mode</h1>
-      <p className="text-[#8a7e78] mb-2">
-        Choose Sea or Rail for each 40ft container. Rail requires a justification code.
-        {ftlCount > 0 && <span className="text-[#c4b8b0]"> · {ftlCount} FTL truck{ftlCount !== 1 ? 's' : ''} travel by road.</span>}
-      </p>
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[#403833] mb-1">Container Transport Mode</h1>
+          <p className="text-[#8a7e78] text-sm">
+            Choose Sea or Rail for each 40ft container. Rail requires a justification code.
+            {ftlCount > 0 && <span className="text-[#8a7e78]"> · {ftlCount} FTL truck{ftlCount !== 1 ? 's' : ''} travel by road.</span>}
+          </p>
+        </div>
 
-      <div className="mb-5 flex flex-wrap gap-3">
+        {/* Running cost total */}
+        {knownCount > 0 && (
+          <div className="bg-white border border-[#e8e0db] rounded-xl px-4 py-3 shadow-card shrink-0">
+            <p className="text-xs text-[#8a7e78] mb-0.5">Total transport cost</p>
+            <p className="text-xl font-bold text-[#403833]">€{totalCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+            {knownCount < containerTrucks.length && (
+              <p className="text-[11px] text-[#8a7e78]">{containerTrucks.length - knownCount} lane{containerTrucks.length - knownCount !== 1 ? 's' : ''} without cost data</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Bulk action + info strip */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <button
+          onClick={setAllSea}
+          className="text-xs px-3 py-1.5 border border-[#e8e0db] rounded-lg text-[#403833] hover:bg-[#fafaf8] hover:border-[#403833] transition-colors font-medium"
+        >
+          Set all Sea
+        </button>
         {railCount > 0 && (
-          <p className="text-xs text-[#8a7e78] pl-3 border-l-2 border-[#e8e0db]">
+          <p className="text-xs text-[#8a7e78] pl-3 border-l border-[#e8e0db]">
             {railCount} rail container{railCount > 1 ? 's' : ''} — VSNs will update to <span className="font-mono text-[#403833]">R_Rx_…</span>
           </p>
         )}
-        <p className="text-xs text-[#8a7e78] pl-3 border-l-2 border-amber-200">
-          Rail is only available for 40ft containers — shipments rebooked as 20ft in the previous step are excluded here and travel by sea.
-        </p>
+        {ftlCount > 0 && (
+          <p className="text-xs text-[#8a7e78] pl-3 border-l border-amber-200">
+            Rail is only for 40ft containers — 20ft rebooking from Review travels by sea.
+          </p>
+        )}
       </div>
 
-      <div className="bg-white border border-[#e8e0db] rounded-xl shadow-card overflow-hidden mb-6 divide-y divide-[#f0ebe8]">
+      <div className="bg-white border border-[#e8e0db] rounded-xl shadow-card overflow-hidden mb-4 divide-y divide-[#f0ebe8]">
         {containerTrucks.map(truck => {
           const d = getDecision(truck.vendorShipmentNumber);
           const costData = costMap[truck.lane];
@@ -85,15 +126,18 @@ export default function TransportModeStep({ confirmedTrucks, costMap, onConfirm,
                   </div>
                   <div className="flex gap-4 text-xs">
                     {seaCost != null && (
-                      <span className={d.mode === 'sea' ? 'text-[#403833] font-medium' : 'text-[#c4b8b0]'}>
+                      <span className={d.mode === 'sea' ? 'text-[#403833] font-semibold' : 'text-[#8a7e78]'}>
                         Sea €{seaCost.toFixed(0)}
                       </span>
                     )}
                     {railCost != null && (
-                      <span className={d.mode === 'rail' ? 'text-blue-700 font-medium' : 'text-[#c4b8b0]'}>
+                      <span className={d.mode === 'rail' ? 'text-blue-700 font-semibold' : 'text-[#8a7e78]'}>
                         Rail €{railCost.toFixed(0)}
                         {seaCost != null && railCost > seaCost && (
                           <span className="text-amber-500 ml-1">+€{(railCost - seaCost).toFixed(0)}</span>
+                        )}
+                        {seaCost != null && railCost <= seaCost && (
+                          <span className="text-green-600 ml-1">-€{(seaCost - railCost).toFixed(0)}</span>
                         )}
                       </span>
                     )}
@@ -180,7 +224,8 @@ export default function TransportModeStep({ confirmedTrucks, costMap, onConfirm,
         })}
       </div>
 
-      <div className="flex items-center justify-between">
+      {/* Sticky bottom nav */}
+      <div className="sticky bottom-0 z-10 bg-white/95 backdrop-blur-sm border-t border-[#e8e0db] py-3 flex items-center justify-between">
         <button onClick={onBack} className="px-4 py-2 text-[#403833] border border-[#e8e0db] rounded-lg text-sm font-medium hover:bg-[#fafaf8] transition-colors">
           ← Back
         </button>

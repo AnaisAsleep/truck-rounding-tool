@@ -29,23 +29,27 @@ export default function ValidationPanel({ validation }) {
 
       {summary && (
         <>
-          <div className="px-4 py-3 flex flex-wrap gap-x-5 gap-y-1 text-xs border-b border-[#e8e0db]">
-            <StatItem
-              label="matched"
-              value={`${summary.matchedLines}/${summary.totalLines}`}
-              color={summary.matchedLines === summary.totalLines ? 'green' : 'red'}
-            />
-            {summary.unmatchedCount > 0 && (
-              <StatItem label="unmatched" value={summary.unmatchedCount} color="red" />
-            )}
-            {summary.noCostCount > 0 && (
-              <StatItem label="no cost data" value={summary.noCostCount} color="amber" />
-            )}
-            <StatItem label="suppliers" value={summary.supplierCount} />
-            <StatItem label="lanes" value={summary.laneCount} />
+          {/* Hero match count */}
+          <div className={`px-4 py-3 flex items-center gap-3 border-b border-[#e8e0db] ${summary.unmatchedCount > 0 ? 'bg-red-50' : 'bg-green-50'}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${summary.unmatchedCount > 0 ? 'bg-red-100' : 'bg-green-100'}`}>
+              {summary.unmatchedCount > 0
+                ? <svg className="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                : <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+              }
+            </div>
+            <div>
+              <p className={`text-sm font-semibold ${summary.unmatchedCount > 0 ? 'text-red-700' : 'text-green-700'}`}>
+                {summary.matchedLines}/{summary.totalLines} lines matched
+                {summary.unmatchedCount > 0 && ` · ${summary.unmatchedCount} will be cut`}
+              </p>
+              <p className="text-xs text-[#8a7e78] mt-0.5">
+                {summary.supplierCount} supplier{summary.supplierCount !== 1 ? 's' : ''} · {summary.laneCount} lane{summary.laneCount !== 1 ? 's' : ''}
+                {summary.noCostCount > 0 && <span className="text-amber-600"> · {summary.noCostCount} lane{summary.noCostCount !== 1 ? 's' : ''} without cost data</span>}
+              </p>
+            </div>
           </div>
 
-          <div className="px-4 py-2.5 flex flex-wrap gap-x-5 text-xs text-[#8a7e78] border-b border-[#e8e0db] last:border-0">
+          <div className="px-4 py-2 flex flex-wrap gap-x-4 text-xs text-[#8a7e78] border-b border-[#e8e0db] last:border-0">
             <span>P1 <strong className="text-[#403833]">{summary.totalPrio1.toLocaleString()}</strong></span>
             <span>P2 <strong className="text-[#403833]">{summary.totalPrio2.toLocaleString()}</strong></span>
             <span>P3 <strong className="text-[#403833]">{summary.totalPrio3.toLocaleString()}</strong></span>

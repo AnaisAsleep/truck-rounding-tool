@@ -94,7 +94,13 @@ export default function MilkRunStep({ milkRunCandidates = [], weekNum, onConfirm
           </svg>
         </div>
         <h2 className="text-xl font-bold text-[#403833] mb-2">No milk run candidates</h2>
-        <p className="text-[#8a7e78]">Advancing to transport mode…</p>
+        <p className="text-[#8a7e78] mb-5">No multi-stop routes were detected for this round.</p>
+        <button
+          onClick={() => onConfirm({})}
+          className="px-6 py-2.5 bg-[#ffa236] text-white font-semibold text-sm rounded-lg hover:bg-[#e8922e] transition-colors"
+        >
+          Continue to Transport →
+        </button>
       </div>
     );
   }
@@ -332,7 +338,7 @@ export default function MilkRunStep({ milkRunCandidates = [], weekNum, onConfirm
         })}
       </div>
 
-      <div className="flex items-center justify-between pt-2 border-t border-[#e8e0db]">
+      <div className="sticky bottom-0 z-10 bg-white/95 backdrop-blur-sm border-t border-[#e8e0db] py-3 mt-2 flex items-center justify-between">
         <button
           onClick={onBack}
           className="px-4 py-2 text-[#403833] border border-[#e8e0db] rounded-lg text-sm font-medium hover:bg-[#fafaf8] transition-colors"

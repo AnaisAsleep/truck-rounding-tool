@@ -90,6 +90,11 @@ export default function SetupStep({ airtableData, onDataRefresh, onNext }) {
                   {fromCache ? 'Cached · ' : ''}Last sync {new Date(lastSynced).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
               )}
+              {airtableData && !loading && (
+                <p className="text-xs text-[#8a7e78] mt-0.5">
+                  {airtableData.palletization?.length ?? 0} SKUs · {airtableData.costs?.length ?? 0} cost lanes
+                </p>
+              )}
             </div>
           </div>
 

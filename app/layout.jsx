@@ -21,7 +21,7 @@ export default function RootLayout({ children }) {
             <span className="text-white/40 text-xs hidden sm:block">Emma Sleep · Transportation D2C Ops</span>
           </div>
         </header>
-        <main className="max-w-5xl mx-auto px-6 py-8">{children}</main>
+        <main>{children}</main>
       </body>
     </html>
   );

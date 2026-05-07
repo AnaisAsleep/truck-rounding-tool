@@ -25,7 +25,7 @@ export default function ProgressBar({ currentStep, steps }) {
                     ? <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M2 6l3 3 5-5"/></svg>
                     : step.id + 1}
                 </div>
-                <span className={`text-xs font-medium ${active ? 'text-[#ffa236]' : done ? 'text-[#403833]' : 'text-[#c4b8b0]'}`}>
+                <span className={`text-xs font-medium hidden sm:inline ${active ? 'text-[#ffa236]' : done ? 'text-[#403833]' : 'text-[#c4b8b0]'}`}>
                   {step.label}
                 </span>
               </div>

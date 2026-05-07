@@ -27,6 +27,8 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack, i
   const [prio4Validation, setPrio4Validation] = useState(null);
   const [detectedWeek, setDetectedWeek] = useState(null);
   const [detectedYear, setDetectedYear] = useState(null);
+  const [weekOverride, setWeekOverride] = useState('');
+  const [yearOverride, setYearOverride] = useState('');
   const [running, setRunning] = useState(false);
   const [error, setError] = useState(null);
   const [draggingMain, setDraggingMain] = useState(false);
@@ -59,6 +61,8 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack, i
       const { week, year } = detectWeekYear(rows);
       setDetectedWeek(week);
       setDetectedYear(year);
+      setWeekOverride(week ? String(week) : '');
+      setYearOverride(year ? String(year) : '');
     } catch (err) {
       setError(`Failed to parse file: ${err.message}`);
     }
@@ -108,8 +112,8 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack, i
     const currentWeek = Math.ceil((now - start) / (7 * 24 * 60 * 60 * 1000));
     const currentYear = now.getFullYear();
 
-    const wk = detectedWeek || currentWeek;
-    const yr = detectedYear || currentYear;
+    const wk = parseInt(weekOverride) || detectedWeek || currentWeek;
+    const yr = parseInt(yearOverride) || detectedYear || currentYear;
 
     try {
       await new Promise(r => setTimeout(r, 50));
@@ -198,12 +202,34 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack, i
       <input ref={prio4InputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={e => { if (e.target.files[0]) handlePrio4File(e.target.files[0]); }} />
 
       {detectedWeek && (
-        <div className="mb-3 flex items-center gap-2 text-xs text-[#8a7e78]">
-          <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          Shipping week detected from file:{' '}
-          <span className="font-semibold text-[#403833]">W{String(detectedWeek).padStart(2,'0')} {detectedYear}</span>
+        <div className="mb-4 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 mb-2">
+            <svg className="w-3.5 h-3.5 text-green-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span className="text-xs font-semibold text-green-800">Shipping week detected from file — verify before running</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div>
+              <label className="text-[11px] text-green-700 block mb-1">Week</label>
+              <input
+                type="number" min="1" max="53"
+                value={weekOverride}
+                onChange={e => setWeekOverride(e.target.value)}
+                className="w-16 border border-green-300 rounded-lg px-2 py-1.5 text-sm font-semibold text-[#403833] focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-center"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] text-green-700 block mb-1">Year</label>
+              <input
+                type="number" min="2020" max="2099"
+                value={yearOverride}
+                onChange={e => setYearOverride(e.target.value)}
+                className="w-20 border border-green-300 rounded-lg px-2 py-1.5 text-sm font-semibold text-[#403833] focus:outline-none focus:ring-2 focus:ring-green-400 bg-white text-center"
+              />
+            </div>
+            <p className="text-xs text-green-700 mt-3.5">Edit if the detected values are wrong.</p>
+          </div>
         </div>
       )}
 
