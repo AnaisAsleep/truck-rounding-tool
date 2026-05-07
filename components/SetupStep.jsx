@@ -26,6 +26,7 @@ export default function SetupStep({ airtableData, onDataRefresh, onNext }) {
   const [error, setError] = useState(null);
   const [fromCache, setFromCache] = useState(false);
   const [lastSynced, setLastSynced] = useState(airtableData?.lastSynced || null);
+  const [isBedsAndAcc, setIsBedsAndAcc] = useState(true);
 
   useEffect(() => {
     if (airtableData) return;
@@ -109,8 +110,32 @@ export default function SetupStep({ airtableData, onDataRefresh, onNext }) {
         )}
       </div>
 
+      {/* Round type */}
+      <div className="mb-6">
+        <p className="text-xs font-semibold text-[#403833] mb-2">Round type</p>
+        <div className="inline-flex rounded-lg border border-[#e8e0db] overflow-hidden text-sm">
+          <button
+            onClick={() => setIsBedsAndAcc(true)}
+            className={`px-4 py-2 font-medium transition-colors ${isBedsAndAcc ? 'bg-[#403833] text-white' : 'bg-white text-[#8a7e78] hover:bg-[#fafaf8]'}`}
+          >
+            Beds &amp; Accessories
+          </button>
+          <button
+            onClick={() => setIsBedsAndAcc(false)}
+            className={`px-4 py-2 font-medium border-l border-[#e8e0db] transition-colors ${!isBedsAndAcc ? 'bg-[#403833] text-white' : 'bg-white text-[#8a7e78] hover:bg-[#fafaf8]'}`}
+          >
+            Other
+          </button>
+        </div>
+        <p className="text-xs text-[#8a7e78] mt-1.5">
+          {isBedsAndAcc
+            ? 'Milk run detection is enabled — multi-stop routes will be proposed where eligible.'
+            : 'Milk run detection is disabled for this round type.'}
+        </p>
+      </div>
+
       <button
-        onClick={onNext}
+        onClick={() => onNext(isBedsAndAcc)}
         disabled={!isConnected || loading}
         className="px-6 py-2.5 bg-[#ffa236] text-white font-semibold text-sm rounded-lg hover:bg-[#e8922e] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >

@@ -20,7 +20,7 @@ function detectWeekYear(rows) {
   return { week: mode(weeks), year: mode(years) };
 }
 
-export default function UploadStep({ airtableData, onRoundingComplete, onBack }) {
+export default function UploadStep({ airtableData, onRoundingComplete, onBack, isBedsAndAcc = false }) {
   const [mainFile, setMainFile] = useState(null);
   const [prio4File, setPrio4File] = useState(null);
   const [validation, setValidation] = useState(null);
@@ -114,7 +114,7 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack })
     try {
       await new Promise(r => setTimeout(r, 50));
       const prio4Rows = prio4Validation?.validRows || [];
-      const results = runRounding(validation.validRows, prio4Rows, validation.costMap, wk, yr);
+      const results = runRounding(validation.validRows, prio4Rows, validation.costMap, wk, yr, isBedsAndAcc);
       onRoundingComplete(results, validation.unmatchedRows, wk, yr);
     } catch (err) {
       setError(`Rounding failed: ${err.message}`);
