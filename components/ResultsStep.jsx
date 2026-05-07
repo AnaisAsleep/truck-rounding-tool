@@ -28,6 +28,7 @@ function unitLabel(truck) {
 export default function ResultsStep({ finalConfirmed, finalCutLines, weekNum, year, onStartOver }) {
   const [history, setHistory] = useState([]);
   const [expandedVSNs, setExpandedVSNs] = useState({});
+  const [historyWarning, setHistoryWarning] = useState(null);
   const stats = calcSummaryStats(finalConfirmed, finalCutLines);
   const ww = String(weekNum).padStart(2, '0');
 
@@ -49,9 +50,30 @@ export default function ResultsStep({ finalConfirmed, finalCutLines, weekNum, ye
           confirmedBase64, cutBase64,
         };
         const existing = loadHistory();
-        const updated = [run, ...existing].slice(0, 20);
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
-        setHistory(updated);
+
+        // Try saving up to 20 runs; if quota exceeded, retry with fewer
+        const trySave = (entries) => {
+          localStorage.setItem(HISTORY_KEY, JSON.stringify(entries));
+        };
+        let saved = false;
+        for (const limit of [20, 10, 5, 1]) {
+          try {
+            const updated = [run, ...existing].slice(0, limit);
+            trySave(updated);
+            setHistory(updated);
+            if (limit < 20) {
+              setHistoryWarning(`Storage nearly full — history trimmed to ${limit} most recent runs.`);
+            }
+            saved = true;
+            break;
+          } catch (e) {
+            if (e.name !== 'QuotaExceededError' && e.name !== 'NS_ERROR_DOM_QUOTA_REACHED') throw e;
+          }
+        }
+        if (!saved) {
+          setHistoryWarning('Storage full — this run could not be saved to history. Download your files now.');
+          setHistory(existing);
+        }
       } catch (err) {
         console.warn('Could not save run history:', err);
       }
@@ -66,6 +88,13 @@ export default function ResultsStep({ finalConfirmed, finalCutLines, weekNum, ye
         <h1 className="text-2xl font-bold text-[#403833]">Results</h1>
         <p className="text-sm text-[#8a7e78] mt-1">Week {ww}, {year}</p>
       </div>
+
+      {historyWarning && (
+        <div className="mb-4 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 flex items-start gap-2">
+          <span className="shrink-0 mt-0.5">⚠</span>
+          <span>{historyWarning}</span>
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-px bg-[#e8e0db] rounded-xl overflow-hidden mb-6 shadow-card">

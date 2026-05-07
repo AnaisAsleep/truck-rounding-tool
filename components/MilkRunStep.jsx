@@ -76,10 +76,7 @@ export default function MilkRunStep({ milkRunCandidates = [], weekNum, onConfirm
     const d = getDecision(id);
     if (!d.action) return false;
     if (d.action === 'cut') return true;
-    if (d.action === 'approve') {
-      // Clean approve only valid at ≥80%; low-fill runs require approve_lu
-      return mr.totalFillFraction >= HEALTHY_FILL;
-    }
+    if (d.action === 'approve') return true;
     if (d.action === 'approve_lu') return !!d.luReason && !!d.freeText?.trim();
     if (d.action === '20ft') return !!d.luReason && !!d.freeText?.trim();
     return false;
@@ -250,21 +247,18 @@ export default function MilkRunStep({ milkRunCandidates = [], weekNum, onConfirm
 
                   {/* Action buttons */}
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {/* Approve — only clean if ≥80% */}
+                    {/* Approve */}
                     <button
                       onClick={() => setField(id, 'action', 'approve')}
-                      disabled={isLowFill}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
                         d.action === 'approve'
                           ? 'bg-green-600 text-white border-green-600'
-                          : isLowFill
-                          ? 'opacity-30 cursor-not-allowed bg-white text-[#403833] border-[#e8e0db]'
                           : 'bg-white text-green-700 border-green-300 hover:border-green-500'
                       }`}
                     >
                       Approve
                     </button>
-                    {/* Approve with LU — required for low-fill */}
+                    {/* Approve with LU — for when a reason code is required */}
                     <button
                       onClick={() => setField(id, 'action', 'approve_lu')}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
@@ -273,7 +267,7 @@ export default function MilkRunStep({ milkRunCandidates = [], weekNum, onConfirm
                           : 'bg-white text-[#403833] border-[#e8e0db] hover:border-[#403833]'
                       }`}
                     >
-                      Approve with LU code{isLowFill ? ' *' : ''}
+                      Approve with LU code
                     </button>
                     {/* Rebook 20ft */}
                     <button
@@ -300,9 +294,9 @@ export default function MilkRunStep({ milkRunCandidates = [], weekNum, onConfirm
                   </div>
 
                   {/* Warnings */}
-                  {(d.action === 'approve_lu' || (d.action === 'approve' && isLowFill)) && (
-                    <div className="mb-3 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800">
-                      ⚠ This milk run is below acceptable fill levels. Approving low-fill milk runs significantly reduces route efficiency and increases cost per piece. This should be an exception, not a standard practice.
+                  {isLowFill && (d.action === 'approve' || d.action === 'approve_lu') && (
+                    <div className="mb-3 px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                      ⚠ This milk run is below 80% fill. Approving low-fill runs increases cost per piece — use "Approve with LU code" if a formal reason code is required.
                     </div>
                   )}
                   {d.action === '20ft' && (
