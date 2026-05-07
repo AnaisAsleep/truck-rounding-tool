@@ -16,9 +16,9 @@ export default function ProgressBar({ currentStep, steps }) {
             <div key={step.id} className="flex items-center" style={{ flex: isLast ? '0 0 auto' : '1 1 0' }}>
               <div className="flex items-center gap-2">
                 <div className={`
-                  w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0 transition-colors
+                  w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0 transition-all
                   ${done   ? 'bg-[#403833] text-white'
-                  : active ? 'bg-[#ffa236] text-white ring-2 ring-[#ffa236]/25 ring-offset-1'
+                  : active ? 'bg-[#ffa236] text-white shadow-orange ring-2 ring-[#ffa236]/25 ring-offset-1'
                   :          'bg-[#f0ebe8] text-[#c4b8b0]'}
                 `}>
                   {done
@@ -30,7 +30,7 @@ export default function ProgressBar({ currentStep, steps }) {
                 </span>
               </div>
               {!isLast && (
-                <div className={`flex-1 h-px mx-3 ${done ? 'bg-[#403833]' : 'bg-[#e8e0db]'}`} />
+                <div className={`flex-1 h-0.5 mx-3 rounded-full transition-colors ${done ? 'bg-[#403833]' : 'bg-[#e8e0db]'}`} />
               )}
             </div>
           );

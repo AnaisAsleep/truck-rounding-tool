@@ -142,7 +142,7 @@ export default function SetupStep({ airtableData, onDataRefresh, onNext }) {
       <button
         onClick={() => onNext(isBedsAndAcc)}
         disabled={!isConnected || loading}
-        className="px-6 py-2.5 bg-[#ffa236] text-white font-semibold text-sm rounded-lg hover:bg-[#e8922e] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="btn-primary"
       >
         Ready to round →
       </button>

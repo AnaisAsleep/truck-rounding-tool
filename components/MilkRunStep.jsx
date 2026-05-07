@@ -8,7 +8,7 @@ const CONTAINER_20FT_FRACTION = 0.45;
 
 function FillBar({ fraction, className = '' }) {
   const pct = Math.min(Math.round(fraction * 100), 100);
-  const barColor = pct >= 80 ? 'bg-green-500' : pct >= 50 ? 'bg-amber-400' : 'bg-red-400';
+  const barColor = pct >= 80 ? 'fill-green' : pct >= 50 ? 'fill-amber' : 'fill-red';
   const textColor = pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-amber-500' : 'text-red-500';
   return (
     <div className={`flex items-center gap-2 ${className}`}>
@@ -97,7 +97,7 @@ export default function MilkRunStep({ milkRunCandidates = [], weekNum, onConfirm
         <p className="text-[#8a7e78] mb-5">No multi-stop routes were detected for this round.</p>
         <button
           onClick={() => onConfirm({})}
-          className="px-6 py-2.5 bg-[#ffa236] text-white font-semibold text-sm rounded-lg hover:bg-[#e8922e] transition-colors"
+          className="btn-primary"
         >
           Continue to Transport →
         </button>
@@ -339,10 +339,7 @@ export default function MilkRunStep({ milkRunCandidates = [], weekNum, onConfirm
       </div>
 
       <div className="sticky bottom-0 z-10 bg-white/95 backdrop-blur-sm border-t border-[#e8e0db] py-3 mt-2 flex items-center justify-between">
-        <button
-          onClick={onBack}
-          className="px-4 py-2 text-[#403833] border border-[#e8e0db] rounded-lg text-sm font-medium hover:bg-[#fafaf8] transition-colors"
-        >
+        <button onClick={onBack} className="btn-ghost">
           ← Back
         </button>
         <div className="flex items-center gap-3">
@@ -354,7 +351,7 @@ export default function MilkRunStep({ milkRunCandidates = [], weekNum, onConfirm
           <button
             onClick={() => onConfirm(decisions)}
             disabled={!allDone}
-            className="px-6 py-2.5 bg-[#ffa236] text-white font-semibold text-sm rounded-lg hover:bg-[#e8922e] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="btn-primary"
           >
             Confirm Milk Runs →
           </button>

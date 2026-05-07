@@ -245,14 +245,14 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack, i
       <div className="flex items-center justify-between mt-6">
         <button
           onClick={onBack}
-          className="px-4 py-2 text-[#403833] border border-[#e8e0db] rounded-lg text-sm font-medium hover:bg-[#fafaf8] transition-colors"
+          className="btn-ghost"
         >
           ← Back
         </button>
         <button
           onClick={handleRunRounding}
           disabled={!canRun}
-          className="px-6 py-2.5 bg-[#ffa236] text-white font-semibold text-sm rounded-lg hover:bg-[#e8922e] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="btn-primary"
         >
           {running ? (
             <>

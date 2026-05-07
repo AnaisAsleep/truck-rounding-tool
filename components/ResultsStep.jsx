@@ -177,7 +177,7 @@ export default function ResultsStep({ finalConfirmed, finalCutLines, weekNum, ye
                     const vsn = truck.vendorShipmentNumber;
                     const fill = Math.round(truck.usedFraction * 100);
                     const fillColor = fill >= 80 ? 'text-green-600' : fill >= 50 ? 'text-amber-500' : 'text-red-500';
-                    const fillBarColor = fill >= 80 ? 'bg-green-500' : fill >= 50 ? 'bg-amber-400' : 'bg-red-400';
+                    const fillBarColor = fill >= 80 ? 'fill-green' : fill >= 50 ? 'fill-amber' : 'fill-red';
                     const isExpanded = expandedVSNs[vsn];
                     const totalQty = truck.lines.reduce((s, l) => s + (l.qty || 0), 0);
                     const p4Count = truck.lines.filter(l => l.priority === 4).length;
@@ -400,9 +400,9 @@ export default function ResultsStep({ finalConfirmed, finalCutLines, weekNum, ye
 function StatCell({ label, value, dimIfZero, highlight }) {
   const isDim = dimIfZero && (value === 0 || value === '0');
   return (
-    <div className="bg-white px-4 py-3.5">
-      <p className="text-xs text-[#8a7e78] mb-1">{label}</p>
-      <p className={`text-lg font-bold ${isDim ? 'text-[#c4b8b0]' : highlight ? 'text-[#ffa236]' : 'text-[#403833]'}`}>{value}</p>
+    <div className="bg-white px-4 py-4">
+      <p className="text-xs text-[#8a7e78] mb-1.5">{label}</p>
+      <p className={`text-2xl font-bold tracking-tight ${isDim ? 'text-[#c4b8b0]' : highlight ? 'text-[#ffa236]' : 'text-[#403833]'}`}>{value}</p>
     </div>
   );
 }

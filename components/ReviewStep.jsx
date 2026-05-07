@@ -110,7 +110,7 @@ export default function ReviewStep({ roundingResults, unmatchedRows = [], onConf
         </div>
         <h2 className="text-xl font-bold text-[#403833] mb-2">All trucks confirmed</h2>
         <p className="text-[#8a7e78] mb-6">No cuts to review — rounding went cleanly.</p>
-        <button onClick={() => onConfirm({}, {}, {})} className="px-6 py-2.5 bg-[#ffa236] text-white font-semibold text-sm rounded-lg hover:bg-[#e8922e] transition-colors">
+        <button onClick={() => onConfirm({}, {}, {})} className="btn-primary">
           Continue →
         </button>
       </div>
@@ -119,7 +119,7 @@ export default function ReviewStep({ roundingResults, unmatchedRows = [], onConf
 
   const avgFillPct = Math.round(avgFillStats.avg * 100);
   const avgFillColor = avgFillPct >= 80 ? 'text-green-600' : avgFillPct >= 50 ? 'text-amber-500' : 'text-red-500';
-  const avgFillBarColor = avgFillPct >= 80 ? 'bg-green-500' : avgFillPct >= 50 ? 'bg-amber-400' : 'bg-red-400';
+  const avgFillBarColor = avgFillPct >= 80 ? 'fill-green' : avgFillPct >= 50 ? 'fill-amber' : 'fill-red';
 
   return (
     <div className="max-w-4xl">
@@ -205,7 +205,7 @@ export default function ReviewStep({ roundingResults, unmatchedRows = [], onConf
 
       {/* Sticky bottom nav */}
       <div className="sticky bottom-0 z-10 bg-white/95 backdrop-blur-sm border-t border-[#e8e0db] py-3 mt-2 flex items-center justify-between">
-        <button onClick={onBack} className="px-4 py-2 text-[#403833] border border-[#e8e0db] rounded-lg text-sm font-medium hover:bg-[#fafaf8] transition-colors">
+        <button onClick={onBack} className="btn-ghost">
           ← Back
         </button>
         <div className="flex items-center gap-3">
@@ -220,7 +220,7 @@ export default function ReviewStep({ roundingResults, unmatchedRows = [], onConf
           <button
             onClick={handleConfirm}
             disabled={!allTrucksDone}
-            className="px-6 py-2.5 bg-[#ffa236] text-white font-semibold text-sm rounded-lg hover:bg-[#e8922e] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="btn-primary"
           >
             Confirm Decisions →
           </button>
@@ -239,7 +239,7 @@ function TruckRow({ truck, decision: d, done, skuAdditions, isExpanded, onToggle
   const adjustedFill = getAdjustedFill(truck, d.action, skuAdditions);
   const fillPct = Math.round(adjustedFill * 100);
   const fillColor = fillPct >= 80 ? 'text-green-600' : fillPct >= 50 ? 'text-amber-500' : 'text-red-500';
-  const fillBarColor = fillPct >= 80 ? 'bg-green-500' : fillPct >= 50 ? 'bg-amber-400' : 'bg-red-400';
+  const fillBarColor = fillPct >= 80 ? 'fill-green' : fillPct >= 50 ? 'fill-amber' : 'fill-red';
 
   return (
     <div className={`px-5 py-4 transition-colors ${!done ? 'bg-amber-50/30' : 'bg-white'}`}>

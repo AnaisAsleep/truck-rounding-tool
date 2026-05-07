@@ -14,7 +14,11 @@
   --c-card:   #ffffff;
 }
 
-html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
 
 body {
   font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
@@ -24,9 +28,57 @@ body {
   font-size: 14px;
 }
 
-*:focus-visible { outline: 2px solid var(--c-accent); outline-offset: 2px; }
+/* Branded text selection */
+::selection {
+  background: rgba(255, 162, 54, 0.18);
+  color: var(--c-dark);
+}
 
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+/* Default transition on interactive elements */
+button, a, input, select, textarea {
+  transition: all 0.15s ease;
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--c-muted); }
+
+@layer components {
+  /* Primary CTA button — gradient + orange shadow + hover lift */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-6 py-2.5
+      bg-gradient-to-b from-[#ffb84d] to-[#ffa236]
+      text-white font-semibold text-sm rounded-lg
+      shadow-orange hover:shadow-orange-lg hover:-translate-y-px
+      active:translate-y-0 active:shadow-orange
+      disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-y-0
+      transition-all duration-150;
+  }
+
+  /* Secondary ghost button */
+  .btn-ghost {
+    @apply px-4 py-2 text-[#403833] border border-[#e8e0db] rounded-lg text-sm font-medium
+      hover:bg-white hover:border-[#c4b8b0] hover:shadow-card
+      transition-all duration-150;
+  }
+
+  /* Gradient fill bars */
+  .fill-green { @apply bg-gradient-to-r from-green-400 to-emerald-500; }
+  .fill-amber { @apply bg-gradient-to-r from-amber-300 to-amber-500; }
+  .fill-red   { @apply bg-gradient-to-r from-red-400 to-rose-500; }
+
+  /* Card with hover lift */
+  .card-interactive {
+    @apply bg-white border border-[#e8e0db] rounded-xl shadow-card
+      hover:shadow-card-hover hover:-translate-y-px
+      transition-all duration-150 cursor-pointer;
+  }
+}

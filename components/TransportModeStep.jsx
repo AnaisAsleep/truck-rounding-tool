@@ -53,7 +53,7 @@ export default function TransportModeStep({ confirmedTrucks, costMap, onConfirm,
         </p>
         <button
           onClick={() => onConfirm({})}
-          className="px-6 py-2.5 bg-[#ffa236] text-white font-semibold text-sm rounded-lg hover:bg-[#e8922e] transition-colors"
+          className="btn-primary"
         >
           Continue to Results →
         </button>
@@ -226,13 +226,13 @@ export default function TransportModeStep({ confirmedTrucks, costMap, onConfirm,
 
       {/* Sticky bottom nav */}
       <div className="sticky bottom-0 z-10 bg-white/95 backdrop-blur-sm border-t border-[#e8e0db] py-3 flex items-center justify-between">
-        <button onClick={onBack} className="px-4 py-2 text-[#403833] border border-[#e8e0db] rounded-lg text-sm font-medium hover:bg-[#fafaf8] transition-colors">
+        <button onClick={onBack} className="btn-ghost">
           ← Back
         </button>
         <button
           onClick={() => onConfirm(decisions)}
           disabled={!allComplete}
-          className="px-6 py-2.5 bg-[#ffa236] text-white font-semibold text-sm rounded-lg hover:bg-[#e8922e] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="btn-primary"
         >
           Confirm & Generate Results →
         </button>
