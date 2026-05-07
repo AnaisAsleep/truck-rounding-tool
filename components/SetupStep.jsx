@@ -129,7 +129,7 @@ export default function SetupStep({ airtableData, onDataRefresh, onNext }) {
             onClick={() => setIsBedsAndAcc(false)}
             className={`px-4 py-2 font-medium border-l border-[#e8e0db] transition-colors ${!isBedsAndAcc ? 'bg-[#403833] text-white' : 'bg-white text-[#8a7e78] hover:bg-[#fafaf8]'}`}
           >
-            Other
+            Mattress
           </button>
         </div>
         <p className="text-xs text-[#8a7e78] mt-1.5">
