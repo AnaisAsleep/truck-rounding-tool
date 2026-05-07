@@ -13,12 +13,12 @@ import { finalizeResults, finalizeMilkRunDecisions } from '../lib/rounding';
 // Step indices
 const STEP_SETUP     = 0;
 const STEP_UPLOAD    = 1;
-const STEP_REVIEW    = 2;
-const STEP_MILKRUN   = 3;
+const STEP_MILKRUN   = 2;
+const STEP_REVIEW    = 3;
 const STEP_TRANSPORT = 4;
 const STEP_RESULTS   = 5;
 
-const STEPS = ['Setup', 'Upload', 'Review', 'Milk Run', 'Transport', 'Results'];
+const STEPS = ['Setup', 'Upload', 'Milk Run', 'Review', 'Transport', 'Results'];
 
 function isContainer(truck) {
   return (
@@ -53,18 +53,18 @@ export default function Home() {
     setUnmatchedRows(unmatched || []);
     if (wk) setWeekNum(wk);
     if (yr) setYear(yr);
-    setStep(STEP_REVIEW);
-  }, []);
-
-  // Review → Milk Run (or skip to Transport if no candidates)
-  const handleReviewConfirm = useCallback((truckDecisions, cutLineNotes, truckAdditions) => {
-    setReviewDecisions({ truckDecisions, cutLineNotes, truckAdditions });
     setStep(STEP_MILKRUN);
   }, []);
 
-  // Milk Run → Transport
+  // Milk Run → Review
   const handleMilkRunConfirm = useCallback((decisions) => {
     setMilkRunDecisions(decisions);
+    setStep(STEP_REVIEW);
+  }, []);
+
+  // Review → Transport
+  const handleReviewConfirm = useCallback((truckDecisions, cutLineNotes, truckAdditions) => {
+    setReviewDecisions({ truckDecisions, cutLineNotes, truckAdditions });
     setStep(STEP_TRANSPORT);
   }, []);
 
@@ -164,20 +164,20 @@ export default function Home() {
             isBedsAndAcc={isBedsAndAcc}
           />
         )}
-        {step === STEP_REVIEW && roundingResults && (
-          <ReviewStep
-            roundingResults={roundingResults}
-            unmatchedRows={unmatchedRows}
-            onConfirm={handleReviewConfirm}
-            onBack={() => setStep(STEP_UPLOAD)}
-          />
-        )}
         {step === STEP_MILKRUN && roundingResults && (
           <MilkRunStep
             milkRunCandidates={roundingResults.milkRunCandidates || []}
             weekNum={weekNum}
             onConfirm={handleMilkRunConfirm}
-            onBack={() => setStep(STEP_REVIEW)}
+            onBack={() => setStep(STEP_UPLOAD)}
+          />
+        )}
+        {step === STEP_REVIEW && roundingResults && (
+          <ReviewStep
+            roundingResults={roundingResults}
+            unmatchedRows={unmatchedRows}
+            onConfirm={handleReviewConfirm}
+            onBack={() => setStep(STEP_MILKRUN)}
           />
         )}
         {step === STEP_TRANSPORT && roundingResults && (
@@ -185,7 +185,7 @@ export default function Home() {
             confirmedTrucks={confirmedContainersForTransport}
             costMap={airtableData?.costMap || {}}
             onConfirm={handleTransportConfirm}
-            onBack={() => setStep(STEP_MILKRUN)}
+            onBack={() => setStep(STEP_REVIEW)}
           />
         )}
         {step === STEP_RESULTS && (
