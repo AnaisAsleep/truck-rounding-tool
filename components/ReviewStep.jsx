@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { LU_REASON_CODES, ROOT_CAUSE_OPTIONS, calcFallbackUnit } from '../lib/rounding';
+import { LU_REASON_CODES, calcFallbackUnit } from '../lib/rounding';
 
 const ACTIONS = [
   { value: 'cut',  label: 'Accept Cut' },
@@ -407,17 +407,6 @@ function TruckRow({ truck, decision: d, done, skuAdditions, isExpanded, onToggle
         </select>
       )}
 
-      {/* Root cause (borderline cuts) */}
-      {d.action === 'cut' && !isAutocut && (
-        <select
-          value={d.rootCause || ''}
-          onChange={e => onSetField('rootCause', e.target.value)}
-          className="w-full border border-[#e8e0db] rounded-lg px-3 py-2 text-sm text-[#403833] focus:outline-none focus:ring-2 focus:ring-[#ffa236] bg-white"
-        >
-          <option value="">Cut reason (optional)</option>
-          {ROOT_CAUSE_OPTIONS.map((r, i) => <option key={i} value={r}>{r}</option>)}
-        </select>
-      )}
     </div>
   );
 }
