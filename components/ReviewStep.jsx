@@ -262,8 +262,11 @@ function TruckRow({ truck, decision: d, done, skuAdditions, isExpanded, onToggle
         <span className={`font-semibold ${fillColor}`}>
           {fillPct}%{d.action === '20ft' ? ' of 20ft' : ' fill'}
         </span>
-        {truck.costPerPiece != null && d.action !== '20ft' && (
-          <span className="text-[#8a7e78]">€{truck.costPerPiece.toFixed(2)}/pc</span>
+        {truck.costPerPiece != null && (
+          <span className="text-[#8a7e78]">
+            €{(d.action === '20ft' ? truck.costPerPiece * CONTAINER_20FT_RATIO : truck.costPerPiece).toFixed(2)}/pc
+            {d.action === '20ft' && <span className="text-[10px] ml-0.5 text-amber-500">est.</span>}
+          </span>
         )}
         {done && d.action !== 'cut' && (
           <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700">Kept</span>
