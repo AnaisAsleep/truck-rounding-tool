@@ -22,9 +22,17 @@ export async function GET() {
       fetchLocationLookupTable().catch(err => { locationLookupError = err.message; return {}; }),
     ]);
 
-    // Build costMap keyed by lane for easy lookup
+    // Build costMap (road/standard) and cost20ftMap (Sea - 20ft) keyed by lane
     const costMap = {};
-    costs.forEach(c => { if (c.lane && !costMap[c.lane]) costMap[c.lane] = c; });
+    const cost20ftMap = {};
+    costs.forEach(c => {
+      if (!c.lane) return;
+      if (c.mode_of_transportation === 'Sea - 20ft') {
+        if (!cost20ftMap[c.lane]) cost20ftMap[c.lane] = c;
+      } else {
+        if (!costMap[c.lane]) costMap[c.lane] = c;
+      }
+    });
 
     return NextResponse.json(
       {
@@ -34,6 +42,7 @@ export async function GET() {
         locationLookup,
         locationLookupError,
         locationLookupCount: Object.keys(locationLookup).length,
+        cost20ftMap,
         lastSynced: new Date().toISOString(),
         meta: {
           palletizationCount: palletization.length,

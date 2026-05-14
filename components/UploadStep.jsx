@@ -55,7 +55,7 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack, i
         return;
       }
 
-      const result = validateRows(rows, airtableData.palletization, airtableData.costs);
+      const result = validateRows(rows, airtableData.palletization, airtableData.costs, airtableData.cost20ftMap || {});
       setValidation({ ...result, errors });
 
       const { week, year } = detectWeekYear(rows);
@@ -89,7 +89,7 @@ export default function UploadStep({ airtableData, onRoundingComplete, onBack, i
         });
         return;
       }
-      const result = validateRows(rows, airtableData.palletization, airtableData.costs);
+      const result = validateRows(rows, airtableData.palletization, airtableData.costs, airtableData.cost20ftMap || {});
       setPrio4Validation({ ...result, errors });
     } catch (err) {
       setPrio4Validation({

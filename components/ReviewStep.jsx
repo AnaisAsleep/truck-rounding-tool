@@ -11,6 +11,15 @@ const ACTIONS = [
 
 const CONTAINER_20FT_RATIO = 0.45;
 
+function calc20ftCostPerPiece(truck, action, ratio) {
+  if (action !== '20ft' || truck.costPerPiece == null) return truck.costPerPiece;
+  const cost20ftData = truck.lines?.[0]?.cost20ftData;
+  if (cost20ftData?.transport_cost_total_eur != null && truck.totalPieces > 0) {
+    return cost20ftData.transport_cost_total_eur / truck.totalPieces;
+  }
+  return truck.costPerPiece * ratio;
+}
+
 function getAdjustedFill(truck, action, skuAdditions) {
   const palletData = truck.lines?.[0]?.palletData;
   const palletsPerTruck = palletData?.pallets_per_truck || 0;
@@ -264,8 +273,10 @@ function TruckRow({ truck, decision: d, done, skuAdditions, isExpanded, onToggle
         </span>
         {truck.costPerPiece != null && (
           <span className="text-[#8a7e78]">
-            €{(d.action === '20ft' ? truck.costPerPiece * CONTAINER_20FT_RATIO : truck.costPerPiece).toFixed(2)}/pc
-            {d.action === '20ft' && <span className="text-[10px] ml-0.5 text-amber-500">est.</span>}
+            €{calc20ftCostPerPiece(truck, d.action, CONTAINER_20FT_RATIO).toFixed(2)}/pc
+            {d.action === '20ft' && !truck.lines?.[0]?.cost20ftData && (
+              <span className="text-[10px] ml-0.5 text-amber-500">est.</span>
+            )}
           </span>
         )}
         {done && d.action !== 'cut' && (
