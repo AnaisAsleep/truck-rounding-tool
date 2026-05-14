@@ -15,10 +15,11 @@ export const dynamic = 'force-dynamic'; // don't pre-render at build time
 export async function GET() {
   try {
     // Fetch all tables in parallel
+    let locationLookupError = null;
     const [palletization, costs, locationLookup] = await Promise.all([
       fetchPalletizationTable(),
       fetchCostTable(),
-      fetchLocationLookupTable().catch(() => ({})), // non-fatal if unavailable
+      fetchLocationLookupTable().catch(err => { locationLookupError = err.message; return {}; }),
     ]);
 
     // Build costMap keyed by lane for easy lookup
@@ -31,6 +32,8 @@ export async function GET() {
         costs,
         costMap,
         locationLookup,
+        locationLookupError,
+        locationLookupCount: Object.keys(locationLookup).length,
         lastSynced: new Date().toISOString(),
         meta: {
           palletizationCount: palletization.length,

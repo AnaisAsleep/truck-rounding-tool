@@ -92,8 +92,11 @@ export default function SetupStep({ airtableData, onDataRefresh, onNext }) {
               )}
               {airtableData && !loading && (
                 <p className="text-xs text-[#8a7e78] mt-0.5">
-                  {airtableData.palletization?.length ?? 0} SKUs · {airtableData.costs?.length ?? 0} cost lanes
+                  {airtableData.palletization?.length ?? 0} SKUs · {airtableData.costs?.length ?? 0} cost lanes · {airtableData.locationLookupCount ?? 0} vendor codes
                 </p>
+              )}
+              {airtableData?.locationLookupError && !loading && (
+                <p className="text-xs text-amber-600 mt-0.5">Vendor lookup failed: {airtableData.locationLookupError}</p>
               )}
             </div>
           </div>
