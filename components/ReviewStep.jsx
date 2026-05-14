@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { LU_REASON_CODES, calcFallbackUnit } from '../lib/rounding';
+import { LU_REASON_CODES, calcFallbackUnit, getMtoMtsLabel, FENN_SUPPLIERS } from '../lib/rounding';
 
 const ACTIONS = [
   { value: 'cut',  label: 'Accept Cut' },
@@ -250,6 +250,10 @@ function TruckRow({ truck, decision: d, done, skuAdditions, isExpanded, onToggle
   const fillColor = fillPct >= 80 ? 'text-green-600' : fillPct >= 50 ? 'text-amber-500' : 'text-red-500';
   const fillBarColor = fillPct >= 80 ? 'fill-green' : fillPct >= 50 ? 'fill-amber' : 'fill-red';
 
+  const isFennTruck = FENN_SUPPLIERS.has(truck.origin);
+  const mtoCount = isFennTruck ? (truck.lines || []).filter(l => getMtoMtsLabel(l.originLocationCode, l.sku) === 'MTO').length : 0;
+  const mtsCount = isFennTruck ? (truck.lines || []).filter(l => getMtoMtsLabel(l.originLocationCode, l.sku) === 'MTS').length : 0;
+
   return (
     <div className={`px-5 py-4 transition-colors ${!done ? 'bg-amber-50/30' : 'bg-white'}`}>
       {/* Header */}
@@ -268,6 +272,12 @@ function TruckRow({ truck, decision: d, done, skuAdditions, isExpanded, onToggle
             <span className="ml-1 px-1 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-600">+P4</span>
           )}
         </button>
+        {isFennTruck && (
+          <span className="flex items-center gap-1">
+            {mtoCount > 0 && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700">{mtoCount} MTO</span>}
+            {mtsCount > 0 && <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">{mtsCount} MTS</span>}
+          </span>
+        )}
         <span className={`font-semibold ${fillColor}`}>
           {fillPct}%{d.action === '20ft' ? ' of 20ft' : ' fill'}
         </span>
@@ -304,6 +314,7 @@ function TruckRow({ truck, decision: d, done, skuAdditions, isExpanded, onToggle
             <thead>
               <tr className="bg-[#fafaf8] border-b border-[#e8e0db]">
                 <th className="text-left px-3 py-1.5 font-semibold text-[#8a7e78]">SKU</th>
+                {isFennTruck && <th className="text-center px-3 py-1.5 font-semibold text-[#8a7e78]">Type</th>}
                 <th className="text-left px-3 py-1.5 font-semibold text-[#8a7e78]">Supplier</th>
                 <th className="text-right px-3 py-1.5 font-semibold text-[#8a7e78]">Qty</th>
                 <th className="text-right px-3 py-1.5 font-semibold text-[#8a7e78]">Pallets</th>
@@ -322,6 +333,17 @@ function TruckRow({ truck, decision: d, done, skuAdditions, isExpanded, onToggle
                 return (
                   <tr key={li} className={`border-t border-[#f0ebe8] ${li % 2 !== 0 ? 'bg-[#fafaf8]' : 'bg-white'}`}>
                     <td className="px-3 py-2 font-mono text-[#403833]">{line.sku}</td>
+                    {isFennTruck && (() => {
+                      const label = getMtoMtsLabel(line.originLocationCode, line.sku);
+                      return (
+                        <td className="px-3 py-2 text-center">
+                          {label === 'MTO'
+                            ? <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700">MTO</span>
+                            : <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">MTS</span>
+                          }
+                        </td>
+                      );
+                    })()}
                     <td className="px-3 py-2 text-[#8a7e78] truncate max-w-[120px]">{line.supplierName || '—'}</td>
                     <td className="px-3 py-2 text-right text-[#403833]">
                       {line.qty?.toLocaleString()}
