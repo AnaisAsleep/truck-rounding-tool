@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { exportConfirmedLoads, exportCutLines, exportCombined, generateBase64Blobs, downloadBase64Blob } from '../lib/excelExporter';
+import { exportConfirmedLoads, exportCutLines, exportCombined, generateBase64Blobs, downloadBase64Blob, exportPOTemplate } from '../lib/excelExporter';
 import { calcSummaryStats } from '../lib/rounding';
 
 const HISTORY_KEY = 'truck_rounding_history';
@@ -335,6 +335,14 @@ export default function ResultsStep({ finalConfirmed, finalCutLines, weekNum, ye
         sublabel={`Confirmed + cut · fill % · cost/piece · W${ww}.xlsx`}
         onClick={() => exportCombined(finalConfirmed, finalCutLines, weekNum)}
       />
+      <div className="mt-3">
+        <DownloadButton
+          accent
+          label="PO Template"
+          sublabel={`BC import · ${stats.totalTrucksConfirmed} trucks · PO_template_W${ww}.csv`}
+          onClick={() => exportPOTemplate(finalConfirmed, weekNum, year)}
+        />
+      </div>
 
       {/* Start over */}
       <div className="my-8">
