@@ -339,7 +339,7 @@ export default function ResultsStep({ finalConfirmed, finalCutLines, weekNum, ye
         <DownloadButton
           accent
           label="PO Template"
-          sublabel={`BC import · ${stats.totalTrucksConfirmed} trucks · PO_template_W${ww}.txt`}
+          sublabel={`BC import · ${stats.totalTrucksConfirmed} trucks · PO_template_W${ww}.csv`}
           onClick={() => exportPOTemplate(finalConfirmed, weekNum, year)}
         />
       </div>
