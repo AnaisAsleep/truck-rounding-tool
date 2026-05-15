@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { LU_REASON_CODES, calcFallbackUnit, getMtoMtsLabel, FENN_SUPPLIERS } from '../lib/rounding';
+import { LU_REASON_CODES, calcFallbackUnit, getMtoMtsLabel } from '../lib/rounding';
+
+const FENN_ORIGINS = ['FENN_EE', 'FEN1_EE'];
 
 const ACTIONS = [
   { value: 'cut',  label: 'Accept Cut' },
@@ -250,7 +252,7 @@ function TruckRow({ truck, decision: d, done, skuAdditions, isExpanded, onToggle
   const fillColor = fillPct >= 80 ? 'text-green-600' : fillPct >= 50 ? 'text-amber-500' : 'text-red-500';
   const fillBarColor = fillPct >= 80 ? 'fill-green' : fillPct >= 50 ? 'fill-amber' : 'fill-red';
 
-  const isFennTruck = FENN_SUPPLIERS.has(truck.origin);
+  const isFennTruck = FENN_ORIGINS.includes(truck.origin);
   const mtoCount = isFennTruck ? (truck.lines || []).filter(l => getMtoMtsLabel(l.originLocationCode, l.sku) === 'MTO').length : 0;
   const mtsCount = isFennTruck ? (truck.lines || []).filter(l => getMtoMtsLabel(l.originLocationCode, l.sku) === 'MTS').length : 0;
 
